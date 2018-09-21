@@ -4,33 +4,24 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
-import org.jivesoftware.smack.ReconnectionManager;
-import org.jivesoftware.smack.SASLAuthentication;
 import org.jivesoftware.smack.SmackConfiguration;
-import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.debugger.SmackDebuggerFactory;
-import org.jivesoftware.smack.sasl.SASLMechanism;
-import org.jivesoftware.smack.sasl.provided.SASLDigestMD5Mechanism;
-import org.jivesoftware.smack.sasl.provided.SASLPlainMechanism;
+import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.roster.Roster;
+import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
-import org.jivesoftware.smack.util.MD5;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jxmpp.jid.parts.Localpart;
-import org.jxmpp.stringprep.XmppStringprepException;
 
-import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.concurrent.Executor;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -38,7 +29,6 @@ import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
 
@@ -220,8 +210,37 @@ public class XmppConnection {
                 .observeOn(AndroidSchedulers.mainThread());
     }
 
-    public void getConnectUsers(){
-//        connection.getUser()
+    /**
+     * 获取所有好友信息
+     *
+     * @return List<RosterEntry>
+     */
+    public Observable<List<RosterEntry>> getAllEntries() {
+        return Observable.just("")
+                .filter(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) throws Exception {
+                        return isAuthenticated();
+                    }
+                })
+                .compose(new ObservableTransformer<String, List<RosterEntry>>() {
+                    @Override
+                    public ObservableSource<List<RosterEntry>> apply(Observable<String> upstream) {
+                        return Observable.create(new ObservableOnSubscribe<List<RosterEntry>>() {
+                            @Override
+                            public void subscribe(ObservableEmitter<List<RosterEntry>> emitter) throws Exception {
+                                Collection<RosterEntry> rosterEntry = Roster.getInstanceFor(connection).getEntries();
+                                List<RosterEntry> entryList = new ArrayList<>();
+                                for (RosterEntry aRosterEntry : rosterEntry) {
+                                    entryList.add(aRosterEntry);
+                                }
+                                emitter.onNext(entryList);
+                            }
+                        });
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
 

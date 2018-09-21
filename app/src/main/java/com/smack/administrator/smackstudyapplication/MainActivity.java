@@ -1,5 +1,6 @@
 package com.smack.administrator.smackstudyapplication;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -82,7 +83,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             }
                         });
                 break;
-            case R.id.et:
+            case R.id.send:
+                startActivity(new Intent(MainActivity.this,ContactListActivity.class));
                 break;
         }
     }
