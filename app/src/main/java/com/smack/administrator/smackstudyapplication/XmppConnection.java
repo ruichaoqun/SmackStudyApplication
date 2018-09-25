@@ -7,13 +7,18 @@ import android.util.Log;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackConfiguration;
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.chat2.ChatManager;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
+import org.jivesoftware.smack.roster.RosterGroup;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
+import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Localpart;
 
 import java.net.InetAddress;
@@ -61,7 +66,27 @@ public class XmppConnection {
 
     private Context appContext;
     private ExecutorService executor;
-    private ConnectionListener connectionListener;
+    private ConnectionListener connectionListener = new ConnectionListener() {
+        @Override
+        public void connected(XMPPConnection connection) {
+
+        }
+
+        @Override
+        public void authenticated(XMPPConnection connection, boolean resumed) {
+
+        }
+
+        @Override
+        public void connectionClosed() {
+
+        }
+
+        @Override
+        public void connectionClosedOnError(Exception e) {
+
+        }
+    };
     //是否已连接服务器
     private boolean isConnect;
     //是否已登录
@@ -115,27 +140,9 @@ public class XmppConnection {
                 config.setCompressionEnabled(true);
                 //设置超时时间，默认30000
                 config.setConnectTimeout(30000);
-
                 connection = new XMPPTCPConnection(config.build());
                 //添加全局连接监听
-                connection.addConnectionListener(new ConnectionListener() {
-                    @Override
-                    public void connected(XMPPConnection connection) {
-                    }
-
-                    @Override
-                    public void authenticated(XMPPConnection connection, boolean resumed) {
-                    }
-
-                    @Override
-                    public void connectionClosed() {
-
-                    }
-
-                    @Override
-                    public void connectionClosedOnError(Exception e) {
-                    }
-                });
+                connection.addConnectionListener(connectionListener);
 
                 connection.connect();
             }
@@ -147,8 +154,12 @@ public class XmppConnection {
         }
     }
 
+    public XMPPTCPConnection getConnection() {
+        return connection;
+    }
+
     /**
-     *
+     *  登录
      * @param account
      * @param password
      */
@@ -167,6 +178,7 @@ public class XmppConnection {
                             @Override
                             public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
                                 connection.login(account, password );
+                                setPresence(0);
                                 emitter.onNext(true);
                             }
                         });
@@ -175,6 +187,69 @@ public class XmppConnection {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
     }
+
+    /**
+     * 更改用户状态
+     */
+    public void setPresence(int code) {
+        Presence presence;
+        try {
+            switch (code) {
+                case 0:
+                    presence = new Presence(Presence.Type.available);
+                    connection.sendStanza(presence);
+                    Log.v("state", "设置在线");
+                    break;
+                case 1:
+                    presence = new Presence(Presence.Type.available);
+                    presence.setMode(Presence.Mode.chat);
+                    connection.sendStanza(presence);
+                    Log.v("state", "设置Q我吧");
+                    break;
+                case 2:
+                    presence = new Presence(Presence.Type.available);
+                    presence.setMode(Presence.Mode.dnd);
+                    connection.sendStanza(presence);
+                    Log.v("state", "设置忙碌");
+                    break;
+                case 3:
+                    presence = new Presence(Presence.Type.available);
+                    presence.setMode(Presence.Mode.away);
+                    connection.sendStanza(presence);
+                    Log.v("state", "设置离开");
+                    break;
+                case 4:
+//                    Roster roster = con.getRoster();
+//                    Collection<RosterEntry> entries = roster.getEntries();
+//                    for (RosterEntry entry : entries) {
+//                        presence = new Presence(Presence.Type.unavailable);
+//                        presence.setPacketID(Packet.ID_NOT_AVAILABLE);
+//                        presence.setFrom(con.getUser());
+//                        presence.setTo(entry.getUser());
+//                        con.sendPacket(presence);
+//                        Log.v("state", presence.toXML());
+//                    }
+//                    // 向同一用户的其他客户端发送隐身状态
+//                    presence = new Presence(Presence.Type.unavailable);
+//                    presence.setPacketID(Packet.ID_NOT_AVAILABLE);
+//                    presence.setFrom(con.getUser());
+//                    presence.setTo(StringUtils.parseBareAddress(con.getUser()));
+//                    con.sendStanza(presence);
+//                    Log.v("state", "设置隐身");
+//                    break;
+                case 5:
+                    presence = new Presence(Presence.Type.unavailable);
+                    connection.sendStanza(presence);
+                    Log.v("state", "设置离线");
+                    break;
+                default:
+                    break;
+            }
+        } catch (SmackException.NotConnectedException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     /**
      * 注册
@@ -242,6 +317,68 @@ public class XmppConnection {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
     }
+
+    /**
+     * 创建聊天窗口
+     *
+     * @param JID JID
+     * @return Chat
+     */
+    public Observable<Chat> getFriendChat(final String JID) {
+        return Observable.just("")
+                .filter(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) throws Exception {
+                        return isAuthenticated();
+                    }
+                })
+                .compose(new ObservableTransformer<String, Chat>() {
+                    @Override
+                    public ObservableSource<Chat> apply(Observable<String> upstream) {
+                        return Observable.create(new ObservableOnSubscribe<Chat>() {
+                            @Override
+                            public void subscribe(ObservableEmitter<Chat> emitter) throws Exception {
+                                Chat chat = ChatManager.getInstanceFor(connection)
+                                        .chatWith(JidCreate.entityBareFrom(JID));
+                                emitter.onNext(chat);
+                            }
+                        });
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+    }
+
+    /**
+     * 发送单人聊天消息
+     *
+     * @param chat    chat
+     * @param message 消息文本
+     */
+    public Observable<Boolean> sendSingleMessage(final Chat chat, final String message) {
+        return Observable.just("")
+                .filter(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) throws Exception {
+                        return isAuthenticated();
+                    }
+                })
+                .compose(new ObservableTransformer<String, Boolean>() {
+                    @Override
+                    public ObservableSource<Boolean> apply(Observable<String> upstream) {
+                        return Observable.create(new ObservableOnSubscribe<Boolean>() {
+                            @Override
+                            public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
+                                chat.send(message);
+                                emitter.onNext(true);
+                            }
+                        });
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+    }
+
 
 
 

@@ -37,6 +37,7 @@ public class ContactListActivity extends AppCompatActivity {
                     public void accept(List<RosterEntry> rosterEntries) throws Exception {
                         chatUsers = rosterEntries;
                         Adapter adapter = new Adapter();
+                        recyclerView.setAdapter(adapter);
                     }
                 }, new Consumer<Throwable>() {
                     @Override
@@ -58,7 +59,13 @@ public class ContactListActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(Viewholder holder, int position) {
             final RosterEntry entry = chatUsers.get(position);
-            holder.tvNick.setText(entry.getName());
+            holder.tvNick.setText(entry.getJid());
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });
         }
 
         @Override
