@@ -11,6 +11,9 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.chat2.ChatManager;
+import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
+import org.jivesoftware.smack.chat2.OutgoingChatMessageListener;
+import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
@@ -18,6 +21,7 @@ import org.jivesoftware.smack.roster.RosterGroup;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Localpart;
 
@@ -66,6 +70,9 @@ public class XmppConnection {
 
     private Context appContext;
     private ExecutorService executor;
+    private ChatManager chatManager;
+
+
     private ConnectionListener connectionListener = new ConnectionListener() {
         @Override
         public void connected(XMPPConnection connection) {
@@ -87,6 +94,22 @@ public class XmppConnection {
 
         }
     };
+
+    private IncomingChatMessageListener incomingChatMessageListener = new IncomingChatMessageListener() {
+        @Override
+        public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
+
+        }
+    };
+
+    private OutgoingChatMessageListener outgoingChatMessageListener = new OutgoingChatMessageListener() {
+        @Override
+        public void newOutgoingMessage(EntityBareJid to, Message message, Chat chat) {
+
+        }
+    };
+
+
     //是否已连接服务器
     private boolean isConnect;
     //是否已登录
@@ -145,6 +168,10 @@ public class XmppConnection {
                 connection.addConnectionListener(connectionListener);
 
                 connection.connect();
+
+                chatManager = ChatManager.getInstanceFor(connection);
+                chatManager.addIncomingListener(incomingChatMessageListener);
+                chatManager.addOutgoingListener(outgoingChatMessageListener);
             }
         }catch (Exception e){
             e.printStackTrace();

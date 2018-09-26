@@ -96,7 +96,7 @@
                 android:layout_height="24dip"
                 android:layout_margin="1dip"
                 android:scaleType="fitCenter"
-                android:src="@drawable/ease_chatting_biaoqing_btn_normal"
+                android:src="@mipmap/ease_chatting_biaoqing_btn_normal"
                 android:visibility="visible" />
 
             <ImageView
@@ -105,7 +105,7 @@
                 android:layout_height="24dip"
                 android:layout_margin="1dip"
                 android:scaleType="fitCenter"
-                android:src="@drawable/ease_chatting_biaoqing_btn_enable"
+                android:src="@mipmap/ease_chatting_biaoqing_btn_enable"
                 android:visibility="invisible" />
             
             </RelativeLayout>

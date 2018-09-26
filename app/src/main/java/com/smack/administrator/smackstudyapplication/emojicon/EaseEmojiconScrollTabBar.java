@@ -10,8 +10,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
-import com.hyphenate.easeui.R;
-import com.hyphenate.util.DensityUtil;
+
+import com.smack.administrator.smackstudyapplication.DensityUtil;
+import com.smack.administrator.smackstudyapplication.R;
 
 import java.util.ArrayList;
 import java.util.List;

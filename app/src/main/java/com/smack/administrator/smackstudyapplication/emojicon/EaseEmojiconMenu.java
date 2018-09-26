@@ -8,11 +8,8 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 
-import com.hyphenate.easeui.R;
-import com.hyphenate.easeui.domain.EaseEmojicon;
-import com.hyphenate.easeui.domain.EaseEmojiconGroupEntity;
-import com.hyphenate.easeui.widget.emojicon.EaseEmojiconPagerView.EaseEmojiconPagerViewListener;
-import com.hyphenate.easeui.widget.emojicon.EaseEmojiconScrollTabBar.EaseScrollTabBarItemClickListener;
+
+import com.smack.administrator.smackstudyapplication.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +71,7 @@ public class EaseEmojiconMenu extends EaseEmojiconMenuBase{
 	    pagerView.setPagerViewListener(new EmojiconPagerViewListener());
         pagerView.init(emojiconGroupList, emojiconColumns,bigEmojiconColumns);
         
-        tabBar.setTabBarItemClickListener(new EaseScrollTabBarItemClickListener() {
+        tabBar.setTabBarItemClickListener(new EaseEmojiconScrollTabBar.EaseScrollTabBarItemClickListener() {
             
             @Override
             public void onItemClick(int position) {
@@ -128,7 +125,7 @@ public class EaseEmojiconMenu extends EaseEmojiconMenuBase{
     }
 	
 	
-	private class EmojiconPagerViewListener implements EaseEmojiconPagerViewListener{
+	private class EmojiconPagerViewListener implements EaseEmojiconPagerView.EaseEmojiconPagerViewListener {
 
         @Override
         public void onPagerViewInited(int groupMaxPageSize, int firstGroupPageSize) {

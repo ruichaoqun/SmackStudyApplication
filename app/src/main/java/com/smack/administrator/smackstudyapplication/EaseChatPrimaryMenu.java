@@ -17,7 +17,6 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.hyphenate.util.EMLog;
 
 /**
  * primary menu
@@ -115,7 +114,6 @@ public class EaseChatPrimaryMenu extends EaseChatPrimaryMenuBase implements OnCl
         editText.setOnKeyListener(new OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-                EMLog.d("key", "keyCode:" + keyCode + " action:" + event.getAction());
 
                 // test on Mac virtual machine: ctrl map to KEYCODE_UNKNOWN
                 if (keyCode == KeyEvent.KEYCODE_UNKNOWN) {
@@ -132,7 +130,6 @@ public class EaseChatPrimaryMenu extends EaseChatPrimaryMenuBase implements OnCl
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                EMLog.d("key", "keyCode:" + event.getKeyCode() + " action" + event.getAction() + " ctrl:" + ctrlPress);
                 if (actionId == EditorInfo.IME_ACTION_SEND ||
                         (event.getKeyCode() == KeyEvent.KEYCODE_ENTER &&
                          event.getAction() == KeyEvent.ACTION_DOWN &&
@@ -165,9 +162,9 @@ public class EaseChatPrimaryMenu extends EaseChatPrimaryMenuBase implements OnCl
      * set recorder view when speak icon is touched
      * @param voiceRecorderView
      */
-    public void setPressToSpeakRecorderView(EaseVoiceRecorderView voiceRecorderView){
-        EaseVoiceRecorderView voiceRecorderView1 = voiceRecorderView;
-    }
+//    public void setPressToSpeakRecorderView(EaseVoiceRecorderView voiceRecorderView){
+//        EaseVoiceRecorderView voiceRecorderView1 = voiceRecorderView;
+//    }
 
     /**
      * append emoji icon to editText

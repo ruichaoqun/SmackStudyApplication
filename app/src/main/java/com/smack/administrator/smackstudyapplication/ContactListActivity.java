@@ -1,5 +1,6 @@
 package com.smack.administrator.smackstudyapplication;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -63,7 +64,9 @@ public class ContactListActivity extends AppCompatActivity {
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    Intent intent = new Intent(ContactListActivity.this,ChatActivity.class);
+                    intent.putExtra("jid",entry.getJid().toString());
+                    startActivity(intent);
                 }
             });
         }

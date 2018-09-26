@@ -27,10 +27,13 @@ import org.jivesoftware.smack.XMPPConnection;
  */
 public class App extends Application {
     private static String TAG = "Application";
+    public static Application application;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        application = this;
         XmppConnection.getInstance().connect(this);
+
     }
 }

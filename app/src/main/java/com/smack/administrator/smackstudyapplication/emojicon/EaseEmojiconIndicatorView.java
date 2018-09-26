@@ -11,8 +11,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
-import com.hyphenate.easeui.R;
-import com.hyphenate.util.DensityUtil;
+
+import com.smack.administrator.smackstudyapplication.DensityUtil;
+import com.smack.administrator.smackstudyapplication.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,8 +45,8 @@ public class EaseEmojiconIndicatorView extends LinearLayout{
     private void init(Context context, AttributeSet attrs){
         this.context = context;
         dotHeight = DensityUtil.dip2px(context, dotHeight);
-        selectedBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.ease_dot_emojicon_selected);
-        unselectedBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.ease_dot_emojicon_unselected);
+        selectedBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ease_dot_emojicon_selected);
+        unselectedBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ease_dot_emojicon_unselected);
         setGravity(Gravity.CENTER_HORIZONTAL);
     }
     

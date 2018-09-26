@@ -1,6 +1,7 @@
 package com.smack.administrator.smackstudyapplication;
 
 import android.app.Application;
+import android.content.Context;
 import android.view.WindowManager;
 
 /**
@@ -23,8 +24,8 @@ import android.view.WindowManager;
  * </table>
  */
 public class DensityUtil {
-    public static int dp2px(float dpValue){
-        float scale = .getDisplayMetrics().density;
+    public static int dip2px(Context context,float dpValue){
+        float scale = context.getResources().getDisplayMetrics().density;
         return (int)(dpValue*scale+0.5f);
     }
 

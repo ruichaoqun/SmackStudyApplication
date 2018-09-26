@@ -10,4 +10,11 @@
     <declare-styleable name="EaseChatExtendMenu">
         <attr name="numColumns" format="integer"/>
     </declare-styleable>
+
+    <declare-styleable name="EaseEmojiconMenu">
+        <attr name="bigEmojiconRows" format="integer"/>
+        <attr name="emojiconColumns" format="integer"/>
+    </declare-styleable>
+
+    <dimen name="height_top_bar">46dp</dimen>
 </resources>

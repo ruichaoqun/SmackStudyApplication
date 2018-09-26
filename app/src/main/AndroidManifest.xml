@@ -20,7 +20,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".ContactListActivity" />
-        <activity android:name=".ChatActivity"></activity>
+        <activity android:name=".ChatActivity"
+            android:windowSoftInputMode="stateAlwaysHidden">
+
+        </activity>
     </application>
 
 </manifest>
