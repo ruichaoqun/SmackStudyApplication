@@ -4,6 +4,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.smack.administrator.smackstudyapplication.dao.ChatDbManager;
+import com.smack.administrator.smackstudyapplication.dao.ChatDbManagerImpl;
+import com.smack.administrator.smackstudyapplication.dao.CustomMessage;
+
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackConfiguration;
@@ -21,6 +25,7 @@ import org.jivesoftware.smack.roster.RosterGroup;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
+import org.jivesoftware.smackx.offline.OfflineMessageManager;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Localpart;
@@ -71,6 +76,7 @@ public class XmppConnection {
     private Context appContext;
     private ExecutorService executor;
     private ChatManager chatManager;
+    private ChatDbManager chatDbManager;
 
 
     private ConnectionListener connectionListener = new ConnectionListener() {
@@ -98,14 +104,16 @@ public class XmppConnection {
     private IncomingChatMessageListener incomingChatMessageListener = new IncomingChatMessageListener() {
         @Override
         public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
-
+//            CustomMessage msg =
+//            message.getBody()
+            String msg = message.getBody();
         }
     };
 
     private OutgoingChatMessageListener outgoingChatMessageListener = new OutgoingChatMessageListener() {
         @Override
         public void newOutgoingMessage(EntityBareJid to, Message message, Chat chat) {
-
+            String msg = message.getBody();
         }
     };
 
@@ -117,6 +125,7 @@ public class XmppConnection {
 
     private XmppConnection() {
         executor = Executors.newCachedThreadPool();
+        chatDbManager = ChatDbManagerImpl.getInstance();
     }
 
     public synchronized static XmppConnection getInstance(){
@@ -206,6 +215,8 @@ public class XmppConnection {
                             public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
                                 connection.login(account, password );
                                 setPresence(0);
+                                OfflineMessageManager offlineMessageManager = new OfflineMessageManager(connection);
+                                offlineMessageManager.
                                 emitter.onNext(true);
                             }
                         });
@@ -406,8 +417,9 @@ public class XmppConnection {
                 .observeOn(AndroidSchedulers.mainThread());
     }
 
-
-
+    public ChatManager getChatManager() {
+        return chatManager;
+    }
 
     /**
      * 判断是否已连接

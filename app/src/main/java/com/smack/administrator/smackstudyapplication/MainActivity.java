@@ -10,8 +10,13 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.chat2.ChatManager;
+import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
+import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.net.InetAddress;
@@ -84,7 +89,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         });
                 break;
             case R.id.send:
-                startActivity(new Intent(MainActivity.this,ContactListActivity.class));
+                String s = editText.getText().toString();
+                String jid = "test1@192.168.31.201";
+                try {
+                    Chat chat = XmppConnection.getInstance().getChatManager().chatWith(JidCreate.entityBareFrom(jid));
+                    chat.send(s);
+                } catch (XmppStringprepException|SmackException.NotConnectedException|InterruptedException e) {
+                    e.printStackTrace();
+                }
                 break;
         }
     }
