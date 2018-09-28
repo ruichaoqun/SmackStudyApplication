@@ -1,5 +1,7 @@
 package com.smack.administrator.smackstudyapplication.dao;
 
+import org.jxmpp.jid.EntityBareJid;
+
 import java.util.List;
 
 /**
@@ -36,21 +38,28 @@ public interface ChatDbManager {
      */
     public List<CustomMessage> getMessage(long conversationId);
 
-    public Long insertOrUpdateConversation(CustomMessage message,String userName);
+    /**
+     * 当收到新消息时，更新会话列表
+     * @param message
+     * @param userName
+     * @param jid
+     * @return
+     */
+    public Long insertOrUpdateConversation(CustomMessage message, String userName, EntityBareJid jid);
 
     /**
      * 存储多条消息
      * @param messages
      * @return
      */
-    public void saveMessage(ConversationInfo info, List<CustomMessage> messages);
+    public void saveMessage(List<CustomMessage> messages);
 
     /**
      * 存储单条消息
      * @param message
      * @return
      */
-    public Long saveMessage(ConversationInfo info,CustomMessage message);
+    public Long saveMessage(CustomMessage message);
 
     /**
      * 更新多条消息

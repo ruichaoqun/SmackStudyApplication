@@ -5,6 +5,8 @@ import android.text.TextUtils;
 import com.smack.administrator.smackstudyapplication.App;
 import com.smack.administrator.smackstudyapplication.MessageUtils;
 
+import org.jxmpp.jid.EntityBareJid;
+
 import java.util.List;
 
 /**
@@ -74,7 +76,7 @@ public class ChatDbManagerImpl implements ChatDbManager{
     }
 
     @Override
-    public Long insertOrUpdateConversation(CustomMessage message,String userName) {
+    public Long insertOrUpdateConversation(CustomMessage message,String userName,EntityBareJid jid) {
         String targetUserName = TextUtils.equals(userName,message.getSendUserName())?message.getRecieveUserName():message.getSendUserName();
         ConversationInfo info = daoSession.getConversationInfoDao().queryBuilder()
                 .where(ConversationInfoDao.Properties.UserName.eq(userName),ConversationInfoDao.Properties.ChatUserName.eq(targetUserName)).build().unique();
@@ -83,12 +85,20 @@ public class ChatDbManagerImpl implements ChatDbManager{
             info.setLastMessage(MessageUtils.getMessageDiscription(message));
             info.setUnReadMessageNumber(info.getUnReadMessageNumber()+1);
             daoSession.getConversationInfoDao().update(info);
+            daoSession.getConversationInfoDao().detachAll();
+            return info.getId();
         }else{
-//            ConversationInfo info1 = new ConversationInfo();
-//            info1.setUserName(userName);
-//            info1.setChatJid(message.);
+            info = new ConversationInfo();
+            info.setUserName(userName);
+            info.setChatUserName(targetUserName);
+            info.setUnReadMessageNumber(1);
+            info.setChatJid(jid.toString());
+            info.setDate(message.getSendDate());
+            info.setLastMessage(MessageUtils.getMessageDiscription(message));
+            long id = daoSession.getConversationInfoDao().insert(info);
+            daoSession.getConversationInfoDao().detachAll();
+            return id;
         }
-        return null;
     }
 
     /**
@@ -97,12 +107,8 @@ public class ChatDbManagerImpl implements ChatDbManager{
      * @return
      */
     @Override
-    public void saveMessage(ConversationInfo info,List<CustomMessage> messages) {
-        for (CustomMessage message: messages) {
-            message.setConversationId(info.getId());
-        }
+    public void saveMessage(List<CustomMessage> messages) {
         daoSession.getCustomMessageDao().insertInTx(messages);
-        daoSession.getConversationInfoDao().detachAll();
         daoSession.getCustomMessageDao().deleteAll();
     }
 
@@ -112,13 +118,13 @@ public class ChatDbManagerImpl implements ChatDbManager{
      * @return
      */
     @Override
-    public Long saveMessage(ConversationInfo info,CustomMessage message) {
-        message.setConversationId(info.getId());
+    public Long saveMessage(CustomMessage message) {
         Long l = daoSession.getCustomMessageDao().insert(message);
-        daoSession.getConversationInfoDao().detachAll();
         daoSession.getCustomMessageDao().deleteAll();
         return l;
     }
+
+
 
     @Override
     public boolean updateMessages(List<CustomMessage> messages) {

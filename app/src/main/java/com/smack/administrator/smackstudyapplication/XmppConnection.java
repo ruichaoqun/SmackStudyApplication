@@ -2,8 +2,10 @@ package com.smack.administrator.smackstudyapplication;
 
 import android.content.Context;
 import android.content.Intent;
+import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.gson.Gson;
 import com.smack.administrator.smackstudyapplication.dao.ChatDbManager;
 import com.smack.administrator.smackstudyapplication.dao.ChatDbManagerImpl;
 import com.smack.administrator.smackstudyapplication.dao.CustomMessage;
@@ -77,6 +79,8 @@ public class XmppConnection {
     private ExecutorService executor;
     private ChatManager chatManager;
     private ChatDbManager chatDbManager;
+    private Roster mRoster;                     //好友管理类
+    private Gson gson = new Gson();
 
 
     private ConnectionListener connectionListener = new ConnectionListener() {
@@ -104,18 +108,35 @@ public class XmppConnection {
     private IncomingChatMessageListener incomingChatMessageListener = new IncomingChatMessageListener() {
         @Override
         public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
-//            CustomMessage msg =
-//            message.getBody()
-            String msg = message.getBody();
+            saveMessage(from,message);
         }
     };
+
+
 
     private OutgoingChatMessageListener outgoingChatMessageListener = new OutgoingChatMessageListener() {
         @Override
         public void newOutgoingMessage(EntityBareJid to, Message message, Chat chat) {
-            String msg = message.getBody();
+            saveMessage(to,message);
         }
     };
+
+    private void saveMessage(EntityBareJid jid, Message message) {
+        String body = message.getBody();
+        CustomMessage customMessage = null;
+        try {
+            customMessage =  gson.fromJson(body,CustomMessage.class);
+            if(customMessage != null){
+                long conversationId = chatDbManager.insertOrUpdateConversation(customMessage,TestData.TEST_USERNAME,jid);
+                customMessage.setConversationId(conversationId);
+                chatDbManager.saveMessage(customMessage);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        if(customMessage == null){
+        }
+    }
 
 
     //是否已连接服务器
@@ -181,6 +202,10 @@ public class XmppConnection {
                 chatManager = ChatManager.getInstanceFor(connection);
                 chatManager.addIncomingListener(incomingChatMessageListener);
                 chatManager.addOutgoingListener(outgoingChatMessageListener);
+
+                mRoster = Roster.getInstanceFor(connection);
+                //默认接受所有订阅请求
+                mRoster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -215,8 +240,7 @@ public class XmppConnection {
                             public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
                                 connection.login(account, password );
                                 setPresence(0);
-                                OfflineMessageManager offlineMessageManager = new OfflineMessageManager(connection);
-                                offlineMessageManager.
+
                                 emitter.onNext(true);
                             }
                         });
