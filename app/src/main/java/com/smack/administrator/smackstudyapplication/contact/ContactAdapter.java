@@ -1,8 +1,13 @@
 package com.smack.administrator.smackstudyapplication.contact;
 
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.smack.administrator.smackstudyapplication.R;
 
 import org.jivesoftware.smack.roster.RosterEntry;
 
@@ -36,12 +41,16 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return null;
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_adapter_contact,parent,false);
+        return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-
+        RosterEntry entry = list.get(position);
+        holder.nickname.setText(entry.getName());
+        holder.content.setText(entry.getJid());
     }
 
     @Override
@@ -50,9 +59,15 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder{
+        ImageView avatar;
+        TextView nickname;
+        TextView content;
 
         public ViewHolder(View itemView) {
             super(itemView);
+            avatar = itemView.findViewById(R.id.iv_avatar);
+            nickname = itemView.findViewById(R.id.tv_nickname);
+            content = itemView.findViewById(R.id.tv_content);
         }
     }
 }

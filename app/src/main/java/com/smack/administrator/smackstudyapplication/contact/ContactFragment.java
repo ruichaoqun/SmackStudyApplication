@@ -24,34 +24,25 @@ import io.reactivex.functions.Consumer;
  * A simple {@link Fragment} subclass.
  */
 public class ContactFragment extends Fragment {
-    private TextView add;
     private RecyclerView recyclerView;
 
 
     public ContactFragment() {
-        // Required empty public constructor
     }
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_contact, container, false);
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        add = view.findViewById(R.id.add);
+
         recyclerView = view.findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        add.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
 
         initData();
     }
@@ -61,7 +52,8 @@ public class ContactFragment extends Fragment {
                 .subscribe(new Consumer<List<RosterEntry>>() {
                     @Override
                     public void accept(List<RosterEntry> rosterEntries) throws Exception {
-
+                        ContactAdapter adapter = new ContactAdapter(rosterEntries);
+                        recyclerView.setAdapter(adapter);
                     }
                 }, new Consumer<Throwable>() {
                     @Override

@@ -5,28 +5,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".contact.ContactFragment">
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="45dp"
-        android:background="@color/colorPrimary">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="通讯录"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:layout_centerInParent="true"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="添加"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
-            android:paddingRight="15sp"
-            android:gravity="center"
-            android:textColor="@android:color/white"
-            android:id="@+id/add"/>
-    </RelativeLayout>
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
