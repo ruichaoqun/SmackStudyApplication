@@ -11,6 +11,7 @@ import com.smack.administrator.smackstudyapplication.R;
 
 import org.jivesoftware.smack.roster.RosterEntry;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -34,6 +35,11 @@ import java.util.List;
  */
 public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHolder> {
     private List<RosterEntry> list;
+    private OnItemClickListener onItemClickListener;
+
+    public ContactAdapter() {
+        list = new ArrayList<>();
+    }
 
     public ContactAdapter(List<RosterEntry> list) {
         this.list = list;
@@ -47,15 +53,32 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
         RosterEntry entry = list.get(position);
         holder.nickname.setText(entry.getName());
         holder.content.setText(entry.getJid());
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(onItemClickListener != null){
+                    onItemClickListener.onItemClick(holder,position);
+                }
+            }
+        });
+    }
+
+    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
+        this.onItemClickListener = onItemClickListener;
     }
 
     @Override
     public int getItemCount() {
         return list.size();
+    }
+
+    public void setData(List<RosterEntry> rosterEntries) {
+        this.list = rosterEntries;
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder{
@@ -69,5 +92,9 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
             nickname = itemView.findViewById(R.id.tv_nickname);
             content = itemView.findViewById(R.id.tv_content);
         }
+    }
+
+    public interface OnItemClickListener{
+        void onItemClick(ViewHolder holder,int position);
     }
 }

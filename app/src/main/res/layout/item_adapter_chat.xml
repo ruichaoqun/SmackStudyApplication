@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="#fff">
+
+    <TextView
+        android:id="@+id/tv_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:textColor="#333333"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        tools:text="早上9:20"
+        android:padding="3dp"
+        android:background="@drawable/shape_bg_chat_date"/>
+
+    <!--  左侧对方对话框  -->
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/cl_left"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/tv_date"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="45dp">
+        <ImageView
+            android:id="@+id/iv_avatar_left"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:src="@mipmap/ease_default_avatar"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="#333"
+            tools:text="张三"
+            app:layout_constraintLeft_toRightOf="@+id/iv_avatar_left"
+            android:layout_marginLeft="10dp"
+            android:id="@+id/tv_nick_left"/>
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/message_container_left"
+            app:layout_constraintLeft_toRightOf="@id/iv_avatar_left"
+            android:layout_marginRight="45dp"/>
+
+    </android.support.constraint.ConstraintLayout>
+
+    <!--  右侧自己对话框  -->
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/cl_right"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/tv_date"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="10dp">
+        <ImageView
+            android:id="@+id/iv_avatar_right"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:src="@mipmap/ease_default_avatar"
+            app:layout_constraintRight_toRightOf="parent" />
+        <FrameLayout
+            android:id="@+id/message_container_right"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="25dp"
+            app:layout_constraintRight_toLeftOf="@id/iv_avatar_right"/>
+        <ImageView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:src="@mipmap/ic_flush"
+            android:scaleType="fitXY"
+            app:layout_constraintRight_toLeftOf="@id/message_container_right"
+            app:layout_constraintTop_toTopOf="@id/message_container_right"
+            app:layout_constraintBottom_toBottomOf="@id/message_container_right"
+            android:layout_marginRight="5dp"
+            android:id="@+id/iv_flush"
+            android:visibility="gone"/>
+    </android.support.constraint.ConstraintLayout>
+</android.support.constraint.ConstraintLayout>

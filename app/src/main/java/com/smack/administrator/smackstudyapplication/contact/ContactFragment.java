@@ -1,6 +1,7 @@
 package com.smack.administrator.smackstudyapplication.contact;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.smack.administrator.smackstudyapplication.ChatActivity;
 import com.smack.administrator.smackstudyapplication.R;
 import com.smack.administrator.smackstudyapplication.XmppConnection;
 
@@ -23,8 +25,9 @@ import io.reactivex.functions.Consumer;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ContactFragment extends Fragment {
+public class ContactFragment extends Fragment implements ContactAdapter.OnItemClickListener {
     private RecyclerView recyclerView;
+    private ContactAdapter adapter;
 
 
     public ContactFragment() {
@@ -43,7 +46,8 @@ public class ContactFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-
+        adapter = new ContactAdapter();
+        adapter.setOnItemClickListener(this);
         initData();
     }
 
@@ -52,8 +56,8 @@ public class ContactFragment extends Fragment {
                 .subscribe(new Consumer<List<RosterEntry>>() {
                     @Override
                     public void accept(List<RosterEntry> rosterEntries) throws Exception {
-                        ContactAdapter adapter = new ContactAdapter(rosterEntries);
-                        recyclerView.setAdapter(adapter);
+                        adapter.setData(rosterEntries);
+                        adapter.notifyDataSetChanged();
                     }
                 }, new Consumer<Throwable>() {
                     @Override
@@ -61,5 +65,11 @@ public class ContactFragment extends Fragment {
 
                     }
                 });
+    }
+
+    @Override
+    public void onItemClick(ContactAdapter.ViewHolder holder, int position) {
+        Intent intent = new Intent(getContext(), ChatActivity.class);
+        startActivity(intent);
     }
 }
