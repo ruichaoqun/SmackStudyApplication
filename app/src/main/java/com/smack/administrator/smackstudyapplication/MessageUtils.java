@@ -1,11 +1,6 @@
 package com.smack.administrator.smackstudyapplication;
 
-import android.support.annotation.StringDef;
-
-import com.smack.administrator.smackstudyapplication.dao.CustomMessage;
-
-import org.jivesoftware.smack.packet.Message;
-import org.jxmpp.jid.EntityBareJid;
+import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
 
 /**
  * <p>Description.</p>
@@ -27,15 +22,15 @@ import org.jxmpp.jid.EntityBareJid;
  * </table>
  */
 public class MessageUtils {
-//    public static CustomMessage createMessage(EntityBareJid jid,boolean isIncoming,Message message){
-//        CustomMessage msg = new CustomMessage();
+//    public static CustomChatMessage createMessage(EntityBareJid jid,boolean isIncoming,Message message){
+//        CustomChatMessage msg = new CustomChatMessage();
 ////        if()
 //    }
 
 
 
 
-    public static String getMessageDiscription(CustomMessage message){
+    public static String getMessageDiscription(CustomChatMessage message){
         switch (message.getType()){
             case MessageType.TYPE_TEXT:
                 return message.getText();

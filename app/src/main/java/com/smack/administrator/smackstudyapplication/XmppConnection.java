@@ -2,13 +2,12 @@ package com.smack.administrator.smackstudyapplication;
 
 import android.content.Context;
 import android.content.Intent;
-import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.smack.administrator.smackstudyapplication.dao.ChatDbManager;
 import com.smack.administrator.smackstudyapplication.dao.ChatDbManagerImpl;
-import com.smack.administrator.smackstudyapplication.dao.CustomMessage;
+import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
@@ -23,11 +22,9 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
-import org.jivesoftware.smack.roster.RosterGroup;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
-import org.jivesoftware.smackx.offline.OfflineMessageManager;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Localpart;
@@ -77,6 +74,7 @@ public class XmppConnection {
 
     private Context appContext;
     private ExecutorService executor;
+    private String currentUserName;
     private ChatManager chatManager;
     private ChatDbManager chatDbManager;
     private Roster mRoster;                     //好友管理类
@@ -123,18 +121,18 @@ public class XmppConnection {
 
     private void saveMessage(EntityBareJid jid, Message message) {
         String body = message.getBody();
-        CustomMessage customMessage = null;
+        CustomChatMessage customChatMessage = null;
         try {
-            customMessage =  gson.fromJson(body,CustomMessage.class);
-            if(customMessage != null){
-                long conversationId = chatDbManager.insertOrUpdateConversation(customMessage,TestData.TEST_USERNAME,jid);
-                customMessage.setConversationId(conversationId);
-                chatDbManager.saveMessage(customMessage);
+            customChatMessage =  gson.fromJson(body,CustomChatMessage.class);
+            if(customChatMessage != null){
+                long conversationId = chatDbManager.insertOrUpdateConversation(customChatMessage,TestData.TEST_USERNAME,jid);
+                customChatMessage.setConversationId(conversationId);
+                chatDbManager.saveMessage(customChatMessage);
             }
         }catch (Exception e){
             e.printStackTrace();
         }
-        if(customMessage == null){
+        if(customChatMessage == null){
         }
     }
 
@@ -240,7 +238,7 @@ public class XmppConnection {
                             public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
                                 connection.login(account, password );
                                 setPresence(0);
-
+                                currentUserName = account;
                                 emitter.onNext(true);
                             }
                         });
@@ -489,4 +487,11 @@ public class XmppConnection {
         appContext.startActivity(intent);
     }
 
+    public Context getAppContext() {
+        return appContext;
+    }
+
+    public String getCurrentUserName() {
+        return currentUserName;
+    }
 }

@@ -4,9 +4,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.smack.administrator.smackstudyapplication.dao.CustomMessage;
-
-import org.jivesoftware.smack.packet.Message;
+import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
 
 import java.util.List;
 
@@ -30,9 +28,9 @@ import java.util.List;
  * </table>
  */
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ViewHolder> {
-    private List<CustomMessage> messageList;
+    private List<CustomChatMessage> messageList;
 
-    public ChatAdapter(List<CustomMessage> messageList) {
+    public ChatAdapter(List<CustomChatMessage> messageList) {
         this.messageList = messageList;
     }
 

@@ -36,7 +36,7 @@ public interface ChatDbManager {
      * @param conversationId
      * @return
      */
-    public List<CustomMessage> getMessage(long conversationId);
+    public List<CustomChatMessage> getMessage(long conversationId);
 
     /**
      * 当收到新消息时，更新会话列表
@@ -45,35 +45,35 @@ public interface ChatDbManager {
      * @param jid
      * @return
      */
-    public Long insertOrUpdateConversation(CustomMessage message, String userName, EntityBareJid jid);
+    public Long insertOrUpdateConversation(CustomChatMessage message, String userName, EntityBareJid jid);
 
     /**
      * 存储多条消息
      * @param messages
      * @return
      */
-    public void saveMessage(List<CustomMessage> messages);
+    public void saveMessage(List<CustomChatMessage> messages);
 
     /**
      * 存储单条消息
      * @param message
      * @return
      */
-    public Long saveMessage(CustomMessage message);
+    public Long saveMessage(CustomChatMessage message);
 
     /**
      * 更新多条消息
      * @param messages
      * @return
      */
-    public boolean updateMessages(List<CustomMessage> messages);
+    public boolean updateMessages(List<CustomChatMessage> messages);
 
     /**
      * 更新单条消息
      * @param message
      * @return
      */
-    public boolean updateMessage(CustomMessage message);
+    public boolean updateMessage(CustomChatMessage message);
 
     /**
      * 删除单个会话

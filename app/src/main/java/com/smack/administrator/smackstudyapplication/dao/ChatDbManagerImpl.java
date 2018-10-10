@@ -66,7 +66,7 @@ public class ChatDbManagerImpl implements ChatDbManager{
      * @return
      */
     @Override
-    public List<CustomMessage> getMessage(long conversationId) {
+    public List<CustomChatMessage> getMessage(long conversationId) {
         ConversationInfo info = daoSession.getConversationInfoDao().queryBuilder()
                 .where(ConversationInfoDao.Properties.Id.eq(conversationId)).unique();
         if(info == null){
@@ -76,7 +76,7 @@ public class ChatDbManagerImpl implements ChatDbManager{
     }
 
     @Override
-    public Long insertOrUpdateConversation(CustomMessage message,String userName,EntityBareJid jid) {
+    public Long insertOrUpdateConversation(CustomChatMessage message, String userName, EntityBareJid jid) {
         String targetUserName = TextUtils.equals(userName,message.getSendUserName())?message.getRecieveUserName():message.getSendUserName();
         ConversationInfo info = daoSession.getConversationInfoDao().queryBuilder()
                 .where(ConversationInfoDao.Properties.UserName.eq(userName),ConversationInfoDao.Properties.ChatUserName.eq(targetUserName)).build().unique();
@@ -107,7 +107,7 @@ public class ChatDbManagerImpl implements ChatDbManager{
      * @return
      */
     @Override
-    public void saveMessage(List<CustomMessage> messages) {
+    public void saveMessage(List<CustomChatMessage> messages) {
         daoSession.getCustomMessageDao().insertInTx(messages);
         daoSession.getCustomMessageDao().deleteAll();
     }
@@ -118,7 +118,7 @@ public class ChatDbManagerImpl implements ChatDbManager{
      * @return
      */
     @Override
-    public Long saveMessage(CustomMessage message) {
+    public Long saveMessage(CustomChatMessage message) {
         Long l = daoSession.getCustomMessageDao().insert(message);
         daoSession.getCustomMessageDao().deleteAll();
         return l;
@@ -127,12 +127,12 @@ public class ChatDbManagerImpl implements ChatDbManager{
 
 
     @Override
-    public boolean updateMessages(List<CustomMessage> messages) {
+    public boolean updateMessages(List<CustomChatMessage> messages) {
         return false;
     }
 
     @Override
-    public boolean updateMessage(CustomMessage message) {
+    public boolean updateMessage(CustomChatMessage message) {
         return false;
     }
 

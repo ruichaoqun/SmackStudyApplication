@@ -24,48 +24,27 @@ import org.greenrobot.greendao.annotation.Generated;
  * </table>
  */
 @Entity
-public class CustomMessage {
+public class CustomChatMessage {
     @Id
     private Long id;                    // 主键
     private String type;                // 消息类型 1.文字类型 2.语音类型 3.图片类型
     private String text;                // 文本消息
     private String imagePath;           // 图片地址
     private String filePath;            // 语音地址
-    private Long sendDate;              // 发送日期
-    //废弃，不用了
-    private Long recieveDate;           // 接收日期
+    private Long time;              // 发送日期
     private String sendUserName;        // 发送发username
     private String recieveUserName;     // 接收方username
     private String sendJid;             // 发送方jid
     private String recieveJid;          // 接收方jid
+    private String sendNickName;        // 发送方昵称
+    private String recieveNickName;     // 接收方昵称
+    private String sendAvatar;          // 发送方头像
+    private String recieveAvatar;       // 接收方头像
     private Boolean isRead;             // 是否已读（对于我接收的）
     private Boolean isSendSuccess;      // 是否发送成功（对于我发出去的）
     private Long conversationId;        // 会话id
 
-    @Generated(hash = 735546106)
-    public CustomMessage(Long id, String type, String text, String imagePath,
-            String filePath, Long sendDate, Long recieveDate, String sendUserName,
-            String recieveUserName, String sendJid, String recieveJid,
-            Boolean isRead, Boolean isSendSuccess, Long conversationId) {
-        this.id = id;
-        this.type = type;
-        this.text = text;
-        this.imagePath = imagePath;
-        this.filePath = filePath;
-        this.sendDate = sendDate;
-        this.recieveDate = recieveDate;
-        this.sendUserName = sendUserName;
-        this.recieveUserName = recieveUserName;
-        this.sendJid = sendJid;
-        this.recieveJid = recieveJid;
-        this.isRead = isRead;
-        this.isSendSuccess = isSendSuccess;
-        this.conversationId = conversationId;
-    }
 
-    @Generated(hash = 1519488932)
-    public CustomMessage() {
-    }
 
     public String getType() {
         return type;
@@ -107,22 +86,12 @@ public class CustomMessage {
         this.id = id;
     }
 
-    public Long getSendDate() {
-        return this.sendDate;
+    public Long getTime() {
+        return time;
     }
 
-    public void setSendDate(Long sendDate) {
-        this.sendDate = sendDate;
-    }
-
-    @Deprecated
-    public Long getRecieveDate() {
-        return this.recieveDate;
-    }
-
-    @Deprecated
-    public void setRecieveDate(Long recieveDate) {
-        this.recieveDate = recieveDate;
+    public void setTime(Long time) {
+        this.time = time;
     }
 
     public String getSendUserName() {
@@ -195,5 +164,37 @@ public class CustomMessage {
 
     public void setConversationId(Long conversationId) {
         this.conversationId = conversationId;
+    }
+
+    public String getSendNickName() {
+        return sendNickName;
+    }
+
+    public void setSendNickName(String sendNickName) {
+        this.sendNickName = sendNickName;
+    }
+
+    public String getRecieveNickName() {
+        return recieveNickName;
+    }
+
+    public void setRecieveNickName(String recieveNickName) {
+        this.recieveNickName = recieveNickName;
+    }
+
+    public String getSendAvatar() {
+        return sendAvatar;
+    }
+
+    public void setSendAvatar(String sendAvatar) {
+        this.sendAvatar = sendAvatar;
+    }
+
+    public String getRecieveAvatar() {
+        return recieveAvatar;
+    }
+
+    public void setRecieveAvatar(String recieveAvatar) {
+        this.recieveAvatar = recieveAvatar;
     }
 }

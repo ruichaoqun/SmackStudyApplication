@@ -1,4 +1,7 @@
 <resources>
+    <string name="readed">已读</string>
+
+
     <string name="app_name">Smack Study Application</string>
     <string name="attach_take_pic">拍照</string>
     <string name="move_up_to_cancel">手指上滑，取消发送</string>

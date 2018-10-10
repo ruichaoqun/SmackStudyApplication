@@ -1,7 +1,5 @@
 package com.smack.administrator.smackstudyapplication.dao;
 
-import android.content.Intent;
-
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.Generated;
@@ -42,31 +40,8 @@ public class ConversationInfo {
     private Integer unReadMessageNumber;    // 未读消息数
 
     @ToMany(referencedJoinProperty = "conversationId")
-    private List<CustomMessage> messages;
-    /** Used to resolve relations */
-    @Generated(hash = 2040040024)
-    private transient DaoSession daoSession;
-    /** Used for active entity operations. */
-    @Generated(hash = 452604254)
-    private transient ConversationInfoDao myDao;
+    private List<CustomChatMessage> messages;
 
-    @Generated(hash = 1692554341)
-    public ConversationInfo(Long id, String userName, String chatUserName,
-            String chatJid, String lastMessage, String type, Long date,
-            Integer unReadMessageNumber) {
-        this.id = id;
-        this.userName = userName;
-        this.chatUserName = chatUserName;
-        this.chatJid = chatJid;
-        this.lastMessage = lastMessage;
-        this.type = type;
-        this.date = date;
-        this.unReadMessageNumber = unReadMessageNumber;
-    }
-
-    @Generated(hash = 837114692)
-    public ConversationInfo() {
-    }
 
     public Long getId() {
         return id;
@@ -132,75 +107,11 @@ public class ConversationInfo {
         this.unReadMessageNumber = unReadMessageNumber;
     }
 
-    /**
-     * To-many relationship, resolved on first access (and after reset).
-     * Changes to to-many relations are not persisted, make changes to the target entity.
-     */
-    @Generated(hash = 476328989)
-    public List<CustomMessage> getMessages() {
-        if (messages == null) {
-            final DaoSession daoSession = this.daoSession;
-            if (daoSession == null) {
-                throw new DaoException("Entity is detached from DAO context");
-            }
-            CustomMessageDao targetDao = daoSession.getCustomMessageDao();
-            List<CustomMessage> messagesNew = targetDao
-                    ._queryConversationInfo_Messages(id);
-            synchronized (this) {
-                if (messages == null) {
-                    messages = messagesNew;
-                }
-            }
-        }
+    public List<CustomChatMessage> getMessages() {
         return messages;
     }
 
-    /** Resets a to-many relationship, making the next get call to query for a fresh result. */
-    @Generated(hash = 1942469556)
-    public synchronized void resetMessages() {
-        messages = null;
-    }
-
-    /**
-     * Convenient call for {@link org.greenrobot.greendao.AbstractDao#delete(Object)}.
-     * Entity must attached to an entity context.
-     */
-    @Generated(hash = 128553479)
-    public void delete() {
-        if (myDao == null) {
-            throw new DaoException("Entity is detached from DAO context");
-        }
-        myDao.delete(this);
-    }
-
-    /**
-     * Convenient call for {@link org.greenrobot.greendao.AbstractDao#refresh(Object)}.
-     * Entity must attached to an entity context.
-     */
-    @Generated(hash = 1942392019)
-    public void refresh() {
-        if (myDao == null) {
-            throw new DaoException("Entity is detached from DAO context");
-        }
-        myDao.refresh(this);
-    }
-
-    /**
-     * Convenient call for {@link org.greenrobot.greendao.AbstractDao#update(Object)}.
-     * Entity must attached to an entity context.
-     */
-    @Generated(hash = 713229351)
-    public void update() {
-        if (myDao == null) {
-            throw new DaoException("Entity is detached from DAO context");
-        }
-        myDao.update(this);
-    }
-
-    /** called by internal mechanisms, do not call yourself. */
-    @Generated(hash = 160097561)
-    public void __setDaoSession(DaoSession daoSession) {
-        this.daoSession = daoSession;
-        myDao = daoSession != null ? daoSession.getConversationInfoDao() : null;
+    public void setMessages(List<CustomChatMessage> messages) {
+        this.messages = messages;
     }
 }
