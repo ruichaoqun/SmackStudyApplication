@@ -7,7 +7,7 @@ import org.greenrobot.greendao.annotation.Generated;
 /**
  * <p>Description.</p>
  * <p>
- * <b>Maintenance History</b>:
+ * <b>联系人</b>:
  * <table>
  * <tr>
  * <th>Date</th>
@@ -27,6 +27,8 @@ import org.greenrobot.greendao.annotation.Generated;
 public class ChatUser  {
     @Id
     private Long id;
+    //当前登录账号（用于同一手机不同账号登录区分每个账号的联系人）
+    private String chatUserName;
     //用户账户名
     private String userName;
     //昵称
@@ -36,10 +38,11 @@ public class ChatUser  {
     //IM jid
     private String jid;
 
-    @Generated(hash = 1126743495)
-    public ChatUser(Long id, String userName, String userNick, String avatar,
-            String jid) {
+    @Generated(hash = 401321336)
+    public ChatUser(Long id, String chatUserName, String userName, String userNick,
+            String avatar, String jid) {
         this.id = id;
+        this.chatUserName = chatUserName;
         this.userName = userName;
         this.userNick = userNick;
         this.avatar = avatar;
@@ -48,6 +51,11 @@ public class ChatUser  {
 
     @Generated(hash = 450922767)
     public ChatUser() {
+    }
+
+    public ChatUser(String chatUserName, String userName) {
+        this.chatUserName = chatUserName;
+        this.userName = userName;
     }
 
     public String getUserName() {
@@ -88,5 +96,13 @@ public class ChatUser  {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getChatUserName() {
+        return chatUserName;
+    }
+
+    public void setChatUserName(String chatUserName) {
+        this.chatUserName = chatUserName;
     }
 }

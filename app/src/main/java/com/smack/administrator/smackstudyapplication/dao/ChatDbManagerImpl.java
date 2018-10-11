@@ -50,8 +50,19 @@ public class ChatDbManagerImpl implements ChatDbManager{
     }
 
     /**
+     * 获取好友联系列表
+     * @param username 当前登录账号
+     * @return
+     */
+    @Override
+    public List<ChatUser> getContactList(String username) {
+        return daoSession.getChatUserDao().queryBuilder().where(ChatUserDao.Properties.ChatUserName.eq(username))
+                .build().list();
+    }
+
+    /**
      * 获取当前用户所有会话列表
-     * @param userName
+     * @param userName username 当前登录账号
      */
     @Override
     public List<ConversationInfo> getConversations(String userName) {
@@ -81,7 +92,7 @@ public class ChatDbManagerImpl implements ChatDbManager{
         ConversationInfo info = daoSession.getConversationInfoDao().queryBuilder()
                 .where(ConversationInfoDao.Properties.UserName.eq(userName),ConversationInfoDao.Properties.ChatUserName.eq(targetUserName)).build().unique();
         if(info != null){
-            info.setDate(message.getSendDate());
+            info.setDate(message.getTime());
             info.setLastMessage(MessageUtils.getMessageDiscription(message));
             info.setUnReadMessageNumber(info.getUnReadMessageNumber()+1);
             daoSession.getConversationInfoDao().update(info);
@@ -93,7 +104,7 @@ public class ChatDbManagerImpl implements ChatDbManager{
             info.setChatUserName(targetUserName);
             info.setUnReadMessageNumber(1);
             info.setChatJid(jid.toString());
-            info.setDate(message.getSendDate());
+            info.setDate(message.getTime());
             info.setLastMessage(MessageUtils.getMessageDiscription(message));
             long id = daoSession.getConversationInfoDao().insert(info);
             daoSession.getConversationInfoDao().detachAll();
@@ -108,8 +119,8 @@ public class ChatDbManagerImpl implements ChatDbManager{
      */
     @Override
     public void saveMessage(List<CustomChatMessage> messages) {
-        daoSession.getCustomMessageDao().insertInTx(messages);
-        daoSession.getCustomMessageDao().deleteAll();
+        daoSession.getCustomChatMessageDao().insertInTx(messages);
+        daoSession.getCustomChatMessageDao().deleteAll();
     }
 
     /**
@@ -119,8 +130,8 @@ public class ChatDbManagerImpl implements ChatDbManager{
      */
     @Override
     public Long saveMessage(CustomChatMessage message) {
-        Long l = daoSession.getCustomMessageDao().insert(message);
-        daoSession.getCustomMessageDao().deleteAll();
+        Long l = daoSession.getCustomChatMessageDao().insert(message);
+        daoSession.getCustomChatMessageDao().deleteAll();
         return l;
     }
 
@@ -143,7 +154,7 @@ public class ChatDbManagerImpl implements ChatDbManager{
         if(info != null){
             daoSession.getConversationInfoDao().deleteByKey(conversationId);
             daoSession.getConversationInfoDao().detachAll();
-            daoSession.getCustomMessageDao().deleteAll();
+            daoSession.getCustomChatMessageDao().deleteAll();
             return true;
         }
         return false;

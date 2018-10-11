@@ -11,15 +11,14 @@ import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
 import android.text.TextUtils;
 
-import com.netease.nim.uikit.R;
-import com.netease.nim.uikit.api.NimUIKit;
-import com.netease.nim.uikit.business.session.viewholder.MsgViewHolderThumbBase;
-import com.netease.nim.uikit.common.util.file.AttachmentStore;
-import com.netease.nim.uikit.common.util.file.FileUtil;
-import com.netease.nim.uikit.common.util.log.LogUtil;
-import com.netease.nim.uikit.common.util.storage.StorageType;
-import com.netease.nim.uikit.common.util.storage.StorageUtil;
-import com.netease.nim.uikit.common.util.string.StringUtil;
+
+import com.smack.administrator.smackstudyapplication.R;
+import com.smack.administrator.smackstudyapplication.XmppConnection;
+import com.smack.administrator.smackstudyapplication.chat.viewholder.MsgViewHolderThumbBase;
+import com.smack.administrator.smackstudyapplication.util.file.AttachmentStore;
+import com.smack.administrator.smackstudyapplication.util.file.FileUtil;
+import com.smack.administrator.smackstudyapplication.util.storage.StorageType;
+import com.smack.administrator.smackstudyapplication.util.storage.StorageUtil;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -42,7 +41,7 @@ public class ImageUtil {
 
     public static Bitmap getDefaultBitmapWhenGetFail() {
         try {
-            return getBitmapImmutableCopy(NimUIKit.getContext().getResources(), R.drawable.nim_image_download_failed);
+            return getBitmapImmutableCopy(XmppConnection.getInstance().getAppContext().getResources(), R.mipmap.nim_image_download_failed);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -279,7 +278,6 @@ public class ImageUtil {
         String filePath = imageFile.getPath();
 
         if (!isInvalidPictureFile(mimeType)) {
-            LogUtil.i("ImageUtil", "is invalid picture file");
             return null;
         }
 
@@ -302,10 +300,11 @@ public class ImageUtil {
     }
 
     private static String getTempFilePath(String extension) {
-        return StorageUtil.getWritePath(
-                NimUIKit.getContext(),
-                "temp_image_" + StringUtil.get36UUID() + "." + extension,
-                StorageType.TYPE_TEMP);
+        return "";
+//        return StorageUtil.getWritePath(
+//                XmppConnection.getInstance().getAppContext(),
+//                "temp_image_" + StringUtil.get36UUID() + "." + extension,
+//                StorageType.TYPE_TEMP);
     }
 
     public static Boolean scaleImage(File srcFile, File dstFile, int dstMaxWH, CompressFormat compressFormat, int quality) {
@@ -319,7 +318,7 @@ public class ImageUtil {
             }
 
             float rotate;
-            String mimeType = com.netease.nim.uikit.common.media.picker.util.BitmapUtil.getImageType(srcFile.getAbsolutePath());
+            String mimeType = "";
             if (!TextUtils.isEmpty(mimeType) && mimeType.equals("image/png")) {
                 // png格式不能使用ExifInterface
                 rotate = 0;
@@ -396,7 +395,7 @@ public class ImageUtil {
             width = bound[0];
             height = bound[1];
         } else if (Integer.class.isInstance(imageObject)) {
-            bound = BitmapDecoder.decodeBound(NimUIKit.getContext().getResources(), (Integer) imageObject);
+            bound = BitmapDecoder.decodeBound(XmppConnection.getInstance().getAppContext().getResources(), (Integer) imageObject);
             width = bound[0];
             height = bound[1];
         } else if (InputStream.class.isInstance(imageObject)) {
@@ -430,7 +429,7 @@ public class ImageUtil {
      */
     public static Bitmap getBitmapFromDrawableRes(int res) {
         try {
-            return getBitmapImmutableCopy(NimUIKit.getContext().getResources(), res);
+            return getBitmapImmutableCopy(XmppConnection.getInstance().getAppContext().getResources(), res);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

@@ -2,11 +2,13 @@ package com.smack.administrator.smackstudyapplication;
 
 import android.content.Context;
 import android.content.Intent;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
 import com.smack.administrator.smackstudyapplication.dao.ChatDbManager;
 import com.smack.administrator.smackstudyapplication.dao.ChatDbManagerImpl;
+import com.smack.administrator.smackstudyapplication.dao.ChatUser;
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -79,6 +81,7 @@ public class XmppConnection {
     private ChatDbManager chatDbManager;
     private Roster mRoster;                     //好友管理类
     private Gson gson = new Gson();
+    private List<ChatUser> chatUsers;
 
 
     private ConnectionListener connectionListener = new ConnectionListener() {
@@ -237,7 +240,10 @@ public class XmppConnection {
                             @Override
                             public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
                                 connection.login(account, password );
+                                //设置在线状态
                                 setPresence(0);
+                                initChatUsers();
+
                                 currentUserName = account;
                                 emitter.onNext(true);
                             }
@@ -246,6 +252,10 @@ public class XmppConnection {
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
+    }
+
+    private void initChatUsers() {
+        chatUsers = chatDbManager.getContactList(currentUserName);
     }
 
     /**
@@ -474,6 +484,18 @@ public class XmppConnection {
         return connection != null && connection.isConnected() && connection.isAuthenticated();
     }
 
+    public ChatUser getUserInfo(String account) {
+        if(account != null && chatUsers != null){
+            for (ChatUser us : chatUsers) {
+                if(TextUtils.equals(account,us.getUserName())){
+                    return us;
+                }
+            }
+        }
+        return new ChatUser(currentUserName,account);
+    }
+
+
 
 
 
@@ -494,4 +516,6 @@ public class XmppConnection {
     public String getCurrentUserName() {
         return currentUserName;
     }
+
+
 }

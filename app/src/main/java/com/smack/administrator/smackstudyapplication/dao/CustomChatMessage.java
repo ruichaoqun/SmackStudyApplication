@@ -1,5 +1,6 @@
 package com.smack.administrator.smackstudyapplication.dao;
 
+import org.greenrobot.greendao.annotation.Convert;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.Generated;
@@ -31,7 +32,8 @@ public class CustomChatMessage {
     private String text;                // 文本消息
     private String imagePath;           // 图片地址
     private String filePath;            // 语音地址
-    private Long time;              // 发送日期
+    private Long time;                  // 发送日期
+    private Boolean isNeedShowTime;     // 是否需要显示时间
     private String sendUserName;        // 发送发username
     private String recieveUserName;     // 接收方username
     private String sendJid;             // 发送方jid
@@ -43,6 +45,42 @@ public class CustomChatMessage {
     private Boolean isRead;             // 是否已读（对于我接收的）
     private Boolean isSendSuccess;      // 是否发送成功（对于我发出去的）
     private Long conversationId;        // 会话id
+    
+    @Convert(converter = MsgStatusEnum.StatusConverter.class,columnType = Integer.class )
+    private MsgStatusEnum msgStatusEnum;
+
+
+
+    @Generated(hash = 1399612868)
+    public CustomChatMessage(Long id, String type, String text, String imagePath,
+            String filePath, Long time, Boolean isNeedShowTime, String sendUserName,
+            String recieveUserName, String sendJid, String recieveJid, String sendNickName,
+            String recieveNickName, String sendAvatar, String recieveAvatar, Boolean isRead,
+            Boolean isSendSuccess, Long conversationId, MsgStatusEnum msgStatusEnum) {
+        this.id = id;
+        this.type = type;
+        this.text = text;
+        this.imagePath = imagePath;
+        this.filePath = filePath;
+        this.time = time;
+        this.isNeedShowTime = isNeedShowTime;
+        this.sendUserName = sendUserName;
+        this.recieveUserName = recieveUserName;
+        this.sendJid = sendJid;
+        this.recieveJid = recieveJid;
+        this.sendNickName = sendNickName;
+        this.recieveNickName = recieveNickName;
+        this.sendAvatar = sendAvatar;
+        this.recieveAvatar = recieveAvatar;
+        this.isRead = isRead;
+        this.isSendSuccess = isSendSuccess;
+        this.conversationId = conversationId;
+        this.msgStatusEnum = msgStatusEnum;
+    }
+
+    @Generated(hash = 1572996633)
+    public CustomChatMessage() {
+    }
 
 
 
@@ -196,5 +234,29 @@ public class CustomChatMessage {
 
     public void setRecieveAvatar(String recieveAvatar) {
         this.recieveAvatar = recieveAvatar;
+    }
+
+    public MsgStatusEnum getMsgStatusEnum() {
+        return this.msgStatusEnum;
+    }
+
+    public void setMsgStatusEnum(MsgStatusEnum msgStatusEnum) {
+        this.msgStatusEnum = msgStatusEnum;
+    }
+
+    public Boolean getNeedShowTime() {
+        return isNeedShowTime;
+    }
+
+    public void setNeedShowTime(Boolean needShowTime) {
+        isNeedShowTime = needShowTime;
+    }
+
+    public Boolean getIsNeedShowTime() {
+        return this.isNeedShowTime;
+    }
+
+    public void setIsNeedShowTime(Boolean isNeedShowTime) {
+        this.isNeedShowTime = isNeedShowTime;
     }
 }

@@ -26,6 +26,13 @@ import java.util.List;
 public interface ChatDbManager {
 
     /**
+     * 获取好友联系列表
+     * @param username
+     * @return
+     */
+    public List<ChatUser> getContactList(String username);
+
+    /**
      * 获取当前用户所有会话列表
      * @param userName
      */

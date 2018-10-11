@@ -13,8 +13,8 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.request.RequestOptions;
-import com.netease.nim.uikit.R;
-import com.netease.nim.uikit.common.util.media.ImageUtil;
+import com.smack.administrator.smackstudyapplication.R;
+import com.smack.administrator.smackstudyapplication.util.ImageUtil;
 
 import java.io.File;
 
@@ -100,7 +100,7 @@ public class MsgThumbImageView extends ImageView {
 
     public void loadAsPath(final String path, final int width, final int height, final int maskId, final String ext) {
         if (TextUtils.isEmpty(path)) {
-            loadAsResource(R.drawable.nim_image_default, maskId);
+            loadAsResource(R.mipmap.xmpp_image_default, maskId);
             return;
         }
 
@@ -113,8 +113,8 @@ public class MsgThumbImageView extends ImageView {
             RequestOptions options = new RequestOptions()
                     .override(width, height)
                     .fitCenter()
-                    .placeholder(R.drawable.nim_image_default)
-                    .error(R.drawable.nim_image_default);
+                    .placeholder(R.mipmap.xmpp_image_default)
+                    .error(R.mipmap.xmpp_image_default);
 
             builder = Glide.with(getContext().getApplicationContext())
                     .asBitmap()

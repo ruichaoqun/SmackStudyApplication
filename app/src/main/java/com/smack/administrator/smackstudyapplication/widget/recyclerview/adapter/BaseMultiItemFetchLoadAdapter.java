@@ -28,7 +28,7 @@ public abstract class BaseMultiItemFetchLoadAdapter<T, K extends BaseViewHolder>
     /**
      * viewType->view holder instance
      */
-    private Map<Integer, Map<String, RecyclerViewHolder>> multiTypeViewHolders;
+    private Map<Integer, Map<Long, RecyclerViewHolder>> multiTypeViewHolders;
 
     /**
      * get view type from data item
@@ -44,7 +44,7 @@ public abstract class BaseMultiItemFetchLoadAdapter<T, K extends BaseViewHolder>
      * @param item
      * @return
      */
-    protected abstract String getItemKey(T item);
+    protected abstract Long getItemKey(T item);
 
     public BaseMultiItemFetchLoadAdapter(RecyclerView recyclerView, List<T> data) {
         super(recyclerView, 0, data);
@@ -74,7 +74,7 @@ public abstract class BaseMultiItemFetchLoadAdapter<T, K extends BaseViewHolder>
         if (multiTypeViewHolders == null) {
             multiTypeViewHolders = new HashMap<>();
         }
-        multiTypeViewHolders.put(type, new HashMap<String, RecyclerViewHolder>());
+        multiTypeViewHolders.put(type, new HashMap<Long, RecyclerViewHolder>());
     }
 
     @Override
@@ -89,7 +89,7 @@ public abstract class BaseMultiItemFetchLoadAdapter<T, K extends BaseViewHolder>
 
     @Override
     protected void convert(final K baseHolder, final T item, final int position, boolean isScrolling) {
-        final String key = getItemKey(item);
+        final Long key = getItemKey(item);
         final int viewType = baseHolder.getItemViewType();
 
         RecyclerViewHolder h = multiTypeViewHolders.get(viewType).get(key);

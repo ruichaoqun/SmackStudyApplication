@@ -11,9 +11,12 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+
 import com.smack.administrator.smackstudyapplication.R;
 import com.smack.administrator.smackstudyapplication.XmppConnection;
+import com.smack.administrator.smackstudyapplication.chat.adapter.MsgAdapter;
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
+import com.smack.administrator.smackstudyapplication.dao.MsgStatusEnum;
 import com.smack.administrator.smackstudyapplication.util.sys.TimeUtil;
 import com.smack.administrator.smackstudyapplication.widget.imageview.HeadImageView;
 import com.smack.administrator.smackstudyapplication.widget.recyclerview.adapter.BaseMultiItemFetchLoadAdapter;
@@ -24,10 +27,9 @@ import com.smack.administrator.smackstudyapplication.widget.recyclerview.holder.
  * 会话窗口消息列表项的ViewHolder基类，负责每个消息项的外层框架，包括头像，昵称，发送/接收进度条，重发按钮等。<br>
  * 具体的消息展示项可继承该基类，然后完成具体消息内容展示即可。
  */
-public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseMultiItemFetchLoadAdapter,
-        BaseViewHolder, CustomChatMessage> {
+public abstract class MsgViewHolderBase extends RecyclerViewHolder<BaseMultiItemFetchLoadAdapter, BaseViewHolder, CustomChatMessage> {
 
-    public ChatRoomMsgViewHolderBase(BaseMultiItemFetchLoadAdapter adapter) {
+    public MsgViewHolderBase(BaseMultiItemFetchLoadAdapter adapter) {
         super(adapter);
         this.adapter = adapter;
     }
@@ -48,6 +50,7 @@ public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseM
     protected FrameLayout contentContainer;
     protected LinearLayout nameContainer;
     protected TextView readReceiptTextView;
+    protected TextView ackMsgTextView;
 
     private HeadImageView avatarLeft;
     private HeadImageView avatarRight;
@@ -65,13 +68,13 @@ public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseM
     // 在该接口中根据layout对各控件成员变量赋值
     abstract protected void inflateContentView();
 
-    // 将消息数据项与内容的view进行绑定
-    abstract protected void bindContentView();
-
     // 在该接口操作BaseViewHolder中的数据，进行事件绑定，可选
     protected void bindHolder(BaseViewHolder holder) {
 
     }
+
+    // 将消息数据项与内容的view进行绑定
+    abstract protected void bindContentView();
 
     // 内容区域点击事件响应处理。
     protected void onItemClick() {
@@ -97,31 +100,35 @@ public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseM
         return false;
     }
 
-    // 是否显示头像，默认为不显示
+    // 是否显示头像，默认为显示
     protected boolean isShowHeadImage() {
-        return false;
+        return true;
     }
 
-    // 是否显示气泡背景，默认为不显示
+    // 是否显示气泡背景，默认为显示
     protected boolean isShowBubble() {
-        return false;
+        return true;
     }
 
-    // 是否显示昵称
-    protected boolean shouldDisplayNick() {
-        return !isMiddleItem();
+    // 是否显示已读，默认为显示
+    protected boolean shouldDisplayReceipt() {
+        return true;
     }
 
     /// -- 以下接口可由子类调用
-    protected final ChatRoomMsgAdapter getMsgAdapter() {
-        return (ChatRoomMsgAdapter) adapter;
+    protected final MsgAdapter getMsgAdapter() {
+        return (MsgAdapter) adapter;
     }
+
+    protected boolean shouldDisplayNick() {
+        return false;
+    }
+
 
     /**
      * 下载附件/缩略图
      */
     protected void downloadAttachment() {
-        //TODO 暂时不提供下载
 //        if (message.getAttachment() != null && message.getAttachment() instanceof FileAttachment)
 //            NIMClient.getService(MsgService.class).downloadAttachment(message, true);
     }
@@ -149,7 +156,7 @@ public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseM
 
     // 判断消息方向，是否是接收到的消息
     protected boolean isReceivedMessage() {
-        return TextUtils.equals(message.getSendUserName(),XmppConnection.getInstance().getCurrentUserName());
+        return message.getSendUserName() == XmppConnection.getInstance().getCurrentUserName();
     }
 
     /// -- 以下是基类实现代码
@@ -175,6 +182,7 @@ public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseM
         nameIconView = findViewById(R.id.message_item_name_icon);
         nameContainer = findViewById(R.id.message_item_name_layout);
         readReceiptTextView = findViewById(R.id.textViewAlreadyRead);
+        ackMsgTextView = findViewById(R.id.team_ack_msg);
 
         // 这里只要inflate出来后加入一次即可
         if (contentContainer.getChildCount() == 0) {
@@ -191,6 +199,8 @@ public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseM
         setOnClickListener();
         setLongClickListener();
         setContent();
+        setReadReceipt();
+        setAckMsg();
 
         bindContentView();
     }
@@ -205,7 +215,7 @@ public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseM
      * 设置时间显示
      */
     private void setTimeTextView() {
-        if (getMsgAdapter().needShowTime(message)) {
+        if (message.getNeedShowTime()) {
             timeTextView.setVisibility(View.VISIBLE);
         } else {
             timeTextView.setVisibility(View.GONE);
@@ -220,7 +230,7 @@ public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseM
      * 设置消息发送状态
      */
     private void setStatus() {
-        MsgStatusEnum status = message.getStatus();
+        MsgStatusEnum status = message.getMsgStatusEnum();
         switch (status) {
             case fail:
                 progressBar.setVisibility(View.GONE);
@@ -249,7 +259,7 @@ public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseM
             show.setVisibility(View.GONE);
         } else {
             show.setVisibility(View.VISIBLE);
-            show.loadBuddyAvatar(message.getFromAccount());
+            show.loadBuddyAvatar(message);
         }
 
     }
@@ -275,16 +285,26 @@ public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseM
         });
 
         // 头像点击事件响应
-        if (NimUIKitImpl.getSessionListener() != null) {
+//        if (NimUIKitImpl.getSessionListener() != null) {
             View.OnClickListener portraitListener = new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    NimUIKitImpl.getSessionListener().onAvatarClicked(context, message);
+                    //TODO 头像点击事件
+//                    NimUIKitImpl.getSessionListener().onAvatarClicked(context, message);
                 }
             };
             avatarLeft.setOnClickListener(portraitListener);
             avatarRight.setOnClickListener(portraitListener);
-        }
+//        }
+        // 已读回执响应事件
+//        if (NimUIKitImpl.getSessionListener() != null) {
+//            ackMsgTextView.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    NimUIKitImpl.getSessionListener().onAckMsgClicked(context, message);
+//                }
+//            });
+//        }
     }
 
     /**
@@ -308,17 +328,18 @@ public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseM
         contentContainer.setOnLongClickListener(longClickListener);
 
         // 头像长按事件响应处理
-        if (NimUIKitImpl.getSessionListener() != null) {
+//        if (NimUIKitImpl.getSessionListener() != null) {
             View.OnLongClickListener longClickListener = new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    NimUIKitImpl.getSessionListener().onAvatarLongClicked(context, message);
+                    //TODO 头像长按事件
+//                    NimUIKitImpl.getSessionListener().onAvatarLongClicked(context, message);
                     return true;
                 }
             };
             avatarLeft.setOnLongClickListener(longClickListener);
             avatarRight.setOnLongClickListener(longClickListener);
-        }
+//        }
     }
 
     private void setNameTextView() {
@@ -326,19 +347,13 @@ public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseM
             nameTextView.setVisibility(View.GONE);
             return;
         }
-
-        nameContainer.setPadding(ScreenUtil.dip2px(6), 0, 0, 0);
         nameTextView.setVisibility(View.VISIBLE);
         nameTextView.setText(getNameText());
-        setStyleOfNameTextView(nameTextView, nameIconView);
     }
+
 
     protected String getNameText() {
-        return ChatRoomViewHolderHelper.getNameText(message);
-    }
-
-    protected void setStyleOfNameTextView(TextView nameTextView, ImageView nameIconView) {
-        ChatRoomViewHolderHelper.setStyleOfNameTextView(message, nameTextView, nameIconView);
+        return "";
     }
 
     private void setContent() {
@@ -349,7 +364,7 @@ public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseM
         LinearLayout bodyContainer = (LinearLayout) view.findViewById(R.id.message_item_body);
 
         // 调整container的位置
-        int index = isReceivedMessage() ? 0 : 3;
+        int index = isReceivedMessage() ? 0 : 4;
         if (bodyContainer.getChildAt(index) != contentContainer) {
             bodyContainer.removeView(contentContainer);
             bodyContainer.addView(contentContainer, index);
@@ -366,5 +381,35 @@ public abstract class ChatRoomMsgViewHolderBase extends RecyclerViewHolder<BaseM
                 contentContainer.setBackgroundResource(rightBackground());
             }
         }
+    }
+
+    //已读回执，暂不使用
+    private void setReadReceipt() {
+//        if (shouldDisplayReceipt() && !TextUtils.isEmpty(getMsgAdapter().getUuid()) && message.getUuid().equals(getMsgAdapter().getUuid())) {
+//            readReceiptTextView.setVisibility(View.VISIBLE);
+//        } else {
+            readReceiptTextView.setVisibility(View.GONE);
+//        }
+    }
+
+    //已读回执，暂不使用
+    private void setAckMsg() {
+//        if (message.getSessionType() == SessionTypeEnum.Team && message.needMsgAck()) {
+//            if (isReceivedMessage()) {
+//                // 收到的需要已读回执的消息，需要给个反馈
+//                ackMsgTextView.setVisibility(View.GONE);
+//                NIMSDK.getTeamService().sendTeamMessageReceipt(message);
+//            } else {
+//                // 自己发的需要已读回执的消息，显示未读人数
+//                ackMsgTextView.setVisibility(View.VISIBLE);
+//                if (message.getTeamMsgAckCount() == 0 && message.getTeamMsgUnAckCount() == 0) {
+//                    ackMsgTextView.setText("还未查看");
+//                } else {
+//                    ackMsgTextView.setText(message.getTeamMsgUnAckCount() + "人未读");
+//                }
+//            }
+//        } else {
+            ackMsgTextView.setVisibility(View.GONE);
+//        }
     }
 }
