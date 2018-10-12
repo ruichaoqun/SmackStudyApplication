@@ -1,6 +1,7 @@
 package com.smack.administrator.smackstudyapplication.chat.adapter;
 
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.View;
 
 
@@ -26,7 +27,7 @@ public class MsgAdapter extends BaseMultiItemFetchLoadAdapter<CustomChatMessage,
     private Map<Class<? extends MsgViewHolderBase>, Integer> holder2ViewType;
 
     private ViewHolderEventListener eventListener;
-    private Map<Long, Float> progresses; // 有文件传输，需要显示进度条的消息ID map
+    private Map<String, Float> progresses; // 有文件传输，需要显示进度条的消息ID map
     private String messageId;
     private Container container;
 
@@ -61,8 +62,8 @@ public class MsgAdapter extends BaseMultiItemFetchLoadAdapter<CustomChatMessage,
     }
 
     @Override
-    protected Long getItemKey(CustomChatMessage item) {
-        return item.getId();
+    protected String getItemKey(CustomChatMessage item) {
+        return item.getUuid();
     }
 
     public void setEventListener(ViewHolderEventListener eventListener) {
@@ -80,7 +81,7 @@ public class MsgAdapter extends BaseMultiItemFetchLoadAdapter<CustomChatMessage,
 
         int index = 0;
         for (CustomChatMessage item : getData()) {
-            if (item.getId() == message.getId()) {
+            if (TextUtils.equals(item.getUuid(),message.getUuid())) {
                 break;
             }
             ++index;
@@ -96,23 +97,23 @@ public class MsgAdapter extends BaseMultiItemFetchLoadAdapter<CustomChatMessage,
     }
 
     public float getProgress(CustomChatMessage message) {
-        Float progress = progresses.get(message.getId());
+        Float progress = progresses.get(message.getUuid());
         return progress == null ? 0 : progress;
     }
 
     public void putProgress(CustomChatMessage message, float progress) {
-        progresses.put(message.getId(), progress);
+        progresses.put(message.getUuid(), progress);
     }
 
     /**
      * *********************** 时间显示处理 ***********************
      */
 
-    private Set<Long> timedItems; // 需要显示消息时间的消息ID
+    private Set<String> timedItems; // 需要显示消息时间的消息ID
     private CustomChatMessage lastShowTimeItem; // 用于消息时间显示,判断和上条消息间的时间间隔
 
     public boolean needShowTime(CustomChatMessage message) {
-        return timedItems.contains(message.getId());
+        return timedItems.contains(message.getUuid());
     }
 
     /**
@@ -166,9 +167,9 @@ public class MsgAdapter extends BaseMultiItemFetchLoadAdapter<CustomChatMessage,
 
     private void setShowTime(CustomChatMessage message, boolean show) {
         if (show) {
-            timedItems.add(message.getId());
+            timedItems.add(message.getUuid());
         } else {
-            timedItems.remove(message.getId());
+            timedItems.remove(message.getUuid());
         }
     }
 
@@ -190,7 +191,7 @@ public class MsgAdapter extends BaseMultiItemFetchLoadAdapter<CustomChatMessage,
                 if (hideTimeAlways(nextItem)) {
                     setShowTime(nextItem, false);
                     if (lastShowTimeItem != null && lastShowTimeItem != null
-                            && lastShowTimeItem.getId() == messageItem.getId()) {
+                            && lastShowTimeItem.getUuid() == messageItem.getUuid()) {
                         lastShowTimeItem = null;
                         for (int i = getDataSize() - 1; i >= 0; i--) {
                             CustomChatMessage item = getItem(i);
@@ -203,7 +204,7 @@ public class MsgAdapter extends BaseMultiItemFetchLoadAdapter<CustomChatMessage,
                 } else {
                     setShowTime(nextItem, true);
                     if (lastShowTimeItem == null
-                            || (lastShowTimeItem != null && lastShowTimeItem.getId() == messageItem.getId())) {
+                            || (lastShowTimeItem != null && lastShowTimeItem.getUuid() == messageItem.getUuid())) {
                         lastShowTimeItem = nextItem;
                     }
                 }

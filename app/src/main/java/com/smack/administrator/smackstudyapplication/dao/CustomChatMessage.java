@@ -28,6 +28,7 @@ import org.greenrobot.greendao.annotation.Generated;
 public class CustomChatMessage {
     @Id
     private Long id;                    // 主键
+    private String uuid;                // 消息uuid，使用当前账号+时间戳拼接
     private String type;                // 消息类型 1.文字类型 2.语音类型 3.图片类型
     private String text;                // 文本消息
     private String imagePath;           // 图片地址
@@ -51,13 +52,14 @@ public class CustomChatMessage {
 
 
 
-    @Generated(hash = 1399612868)
-    public CustomChatMessage(Long id, String type, String text, String imagePath,
+    @Generated(hash = 181135369)
+    public CustomChatMessage(Long id, String uuid, String type, String text, String imagePath,
             String filePath, Long time, Boolean isNeedShowTime, String sendUserName,
             String recieveUserName, String sendJid, String recieveJid, String sendNickName,
             String recieveNickName, String sendAvatar, String recieveAvatar, Boolean isRead,
             Boolean isSendSuccess, Long conversationId, MsgStatusEnum msgStatusEnum) {
         this.id = id;
+        this.uuid = uuid;
         this.type = type;
         this.text = text;
         this.imagePath = imagePath;
@@ -82,7 +84,13 @@ public class CustomChatMessage {
     public CustomChatMessage() {
     }
 
+    public String getUuid() {
+        return uuid;
+    }
 
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
 
     public String getType() {
         return type;

@@ -243,7 +243,6 @@ public class XmppConnection {
                                 //设置在线状态
                                 setPresence(0);
                                 initChatUsers();
-
                                 currentUserName = account;
                                 emitter.onNext(true);
                             }
@@ -425,7 +424,7 @@ public class XmppConnection {
      * @param chat    chat
      * @param message 消息文本
      */
-    public Observable<Boolean> sendSingleMessage(final Chat chat, final String message) {
+    public Observable<Boolean> sendMessage(final Chat chat, final CustomChatMessage message) {
         return Observable.just("")
                 .filter(new Predicate<String>() {
                     @Override
@@ -439,7 +438,7 @@ public class XmppConnection {
                         return Observable.create(new ObservableOnSubscribe<Boolean>() {
                             @Override
                             public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
-                                chat.send(message);
+                                chat.send(gson.toJson(message));
                                 emitter.onNext(true);
                             }
                         });
