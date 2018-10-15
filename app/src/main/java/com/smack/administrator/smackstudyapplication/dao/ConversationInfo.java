@@ -197,6 +197,12 @@ public class ConversationInfo {
         myDao.update(this);
     }
 
+    public void newConversationInfo(String userName,String chatUserName,String chatJid){
+        this.userName = userName;
+        this.chatUserName = chatUserName;
+        this.chatJid = chatJid;
+    }
+
     /** called by internal mechanisms, do not call yourself. */
     @Generated(hash = 160097561)
     public void __setDaoSession(DaoSession daoSession) {

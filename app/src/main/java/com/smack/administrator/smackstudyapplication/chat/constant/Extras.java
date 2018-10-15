@@ -40,7 +40,9 @@ public interface Extras {
     String EXTRA_RETURN_DATA = "return-data";
 
     // 参数
-    String EXTRA_ACCOUNT = "account";
+    String EXTRA_JID = "jid";
+    String EXTRA_CONVERSATION_ID = "conversationId";
+    String EXTRA_CHAT_USER = "chatUser";
     String EXTRA_TYPE = "type";
     String EXTRA_ANCHOR = "anchor";
 

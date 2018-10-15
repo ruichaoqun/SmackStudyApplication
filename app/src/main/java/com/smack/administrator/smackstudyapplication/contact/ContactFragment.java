@@ -15,6 +15,8 @@ import android.widget.TextView;
 import com.smack.administrator.smackstudyapplication.ChatActivity;
 import com.smack.administrator.smackstudyapplication.R;
 import com.smack.administrator.smackstudyapplication.XmppConnection;
+import com.smack.administrator.smackstudyapplication.chat.activity.P2PMessageActivity;
+import com.smack.administrator.smackstudyapplication.dao.ChatUser;
 
 import org.jivesoftware.smack.roster.RosterEntry;
 
@@ -48,14 +50,15 @@ public class ContactFragment extends Fragment implements ContactAdapter.OnItemCl
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new ContactAdapter();
         adapter.setOnItemClickListener(this);
+        recyclerView.setAdapter(adapter);
         initData();
     }
 
     private void initData() {
         XmppConnection.getInstance().getAllEntries()
-                .subscribe(new Consumer<List<RosterEntry>>() {
+                .subscribe(new Consumer<List<ChatUser>>() {
                     @Override
-                    public void accept(List<RosterEntry> rosterEntries) throws Exception {
+                    public void accept(List<ChatUser> rosterEntries) throws Exception {
                         adapter.setData(rosterEntries);
                         adapter.notifyDataSetChanged();
                     }
@@ -69,7 +72,9 @@ public class ContactFragment extends Fragment implements ContactAdapter.OnItemCl
 
     @Override
     public void onItemClick(ContactAdapter.ViewHolder holder, int position) {
-        Intent intent = new Intent(getContext(), ChatActivity.class);
-        startActivity(intent);
+        ChatUser user = adapter.getItem(position);
+        if(user != null){
+            P2PMessageActivity.launchFrom(getContext(),user,-1);
+        }
     }
 }

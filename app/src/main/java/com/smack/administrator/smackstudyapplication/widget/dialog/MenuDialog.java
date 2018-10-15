@@ -8,7 +8,8 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.netease.nim.uikit.R;
+
+import com.smack.administrator.smackstudyapplication.R;
 
 import java.util.ArrayList;
 import java.util.List;

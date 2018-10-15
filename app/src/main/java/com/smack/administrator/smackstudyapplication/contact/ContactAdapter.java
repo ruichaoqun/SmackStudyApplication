@@ -7,7 +7,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.smack.administrator.smackstudyapplication.R;
+import com.smack.administrator.smackstudyapplication.dao.ChatUser;
 
 import org.jivesoftware.smack.roster.RosterEntry;
 
@@ -34,15 +36,24 @@ import java.util.List;
  * </table>
  */
 public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHolder> {
-    private List<RosterEntry> list;
+    private List<ChatUser> list;
     private OnItemClickListener onItemClickListener;
 
     public ContactAdapter() {
         list = new ArrayList<>();
     }
 
-    public ContactAdapter(List<RosterEntry> list) {
+    public ContactAdapter(List<ChatUser> list) {
         this.list = list;
+    }
+
+    public ChatUser getItem(int position){
+        if(list == null )
+            return null;
+        if(list.size() < position){
+            return null;
+        }
+        return list.get(position);
     }
 
     @Override
@@ -54,9 +65,9 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-        RosterEntry entry = list.get(position);
-        holder.nickname.setText(entry.getName());
-        holder.content.setText(entry.getJid());
+        ChatUser user = list.get(position);
+        holder.nickname.setText(user.getUserNick());
+        holder.content.setText(user.getJid());
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -77,7 +88,7 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         return list.size();
     }
 
-    public void setData(List<RosterEntry> rosterEntries) {
+    public void setData(List<ChatUser> rosterEntries) {
         this.list = rosterEntries;
     }
 

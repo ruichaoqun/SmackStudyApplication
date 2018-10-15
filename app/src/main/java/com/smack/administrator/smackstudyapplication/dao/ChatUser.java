@@ -1,5 +1,8 @@
 package com.smack.administrator.smackstudyapplication.dao;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.Generated;
@@ -24,7 +27,7 @@ import org.greenrobot.greendao.annotation.Generated;
  * </table>
  */
 @Entity
-public class ChatUser  {
+public class ChatUser implements Parcelable {
     @Id
     private Long id;
     //当前登录账号（用于同一手机不同账号登录区分每个账号的联系人）
@@ -105,4 +108,40 @@ public class ChatUser  {
     public void setChatUserName(String chatUserName) {
         this.chatUserName = chatUserName;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeValue(this.id);
+        dest.writeString(this.chatUserName);
+        dest.writeString(this.userName);
+        dest.writeString(this.userNick);
+        dest.writeString(this.avatar);
+        dest.writeString(this.jid);
+    }
+
+    protected ChatUser(Parcel in) {
+        this.id = (Long) in.readValue(Long.class.getClassLoader());
+        this.chatUserName = in.readString();
+        this.userName = in.readString();
+        this.userNick = in.readString();
+        this.avatar = in.readString();
+        this.jid = in.readString();
+    }
+
+    public static final Parcelable.Creator<ChatUser> CREATOR = new Parcelable.Creator<ChatUser>() {
+        @Override
+        public ChatUser createFromParcel(Parcel source) {
+            return new ChatUser(source);
+        }
+
+        @Override
+        public ChatUser[] newArray(int size) {
+            return new ChatUser[size];
+        }
+    };
 }

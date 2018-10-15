@@ -40,6 +40,8 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 
+import com.smack.administrator.smackstudyapplication.util.SampleSizeUtil;
+
 
 public abstract class BaseZoomableImageView extends View {
     // Statics

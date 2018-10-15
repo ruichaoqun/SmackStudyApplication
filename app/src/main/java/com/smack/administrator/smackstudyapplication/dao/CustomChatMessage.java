@@ -1,5 +1,8 @@
 package com.smack.administrator.smackstudyapplication.dao;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import org.greenrobot.greendao.annotation.Convert;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
@@ -25,7 +28,7 @@ import org.greenrobot.greendao.annotation.Generated;
  * </table>
  */
 @Entity
-public class CustomChatMessage {
+public class CustomChatMessage implements Parcelable {
     @Id
     private Long id;                    // 主键
     private String uuid;                // 消息uuid，使用当前账号+时间戳拼接
@@ -267,4 +270,69 @@ public class CustomChatMessage {
     public void setIsNeedShowTime(Boolean isNeedShowTime) {
         this.isNeedShowTime = isNeedShowTime;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeValue(this.id);
+        dest.writeString(this.uuid);
+        dest.writeString(this.type);
+        dest.writeString(this.text);
+        dest.writeString(this.imagePath);
+        dest.writeString(this.filePath);
+        dest.writeValue(this.time);
+        dest.writeValue(this.isNeedShowTime);
+        dest.writeString(this.sendUserName);
+        dest.writeString(this.recieveUserName);
+        dest.writeString(this.sendJid);
+        dest.writeString(this.recieveJid);
+        dest.writeString(this.sendNickName);
+        dest.writeString(this.recieveNickName);
+        dest.writeString(this.sendAvatar);
+        dest.writeString(this.recieveAvatar);
+        dest.writeValue(this.isRead);
+        dest.writeValue(this.isSendSuccess);
+        dest.writeValue(this.conversationId);
+        dest.writeInt(this.msgStatusEnum == null ? -1 : this.msgStatusEnum.ordinal());
+    }
+
+    protected CustomChatMessage(Parcel in) {
+        this.id = (Long) in.readValue(Long.class.getClassLoader());
+        this.uuid = in.readString();
+        this.type = in.readString();
+        this.text = in.readString();
+        this.imagePath = in.readString();
+        this.filePath = in.readString();
+        this.time = (Long) in.readValue(Long.class.getClassLoader());
+        this.isNeedShowTime = (Boolean) in.readValue(Boolean.class.getClassLoader());
+        this.sendUserName = in.readString();
+        this.recieveUserName = in.readString();
+        this.sendJid = in.readString();
+        this.recieveJid = in.readString();
+        this.sendNickName = in.readString();
+        this.recieveNickName = in.readString();
+        this.sendAvatar = in.readString();
+        this.recieveAvatar = in.readString();
+        this.isRead = (Boolean) in.readValue(Boolean.class.getClassLoader());
+        this.isSendSuccess = (Boolean) in.readValue(Boolean.class.getClassLoader());
+        this.conversationId = (Long) in.readValue(Long.class.getClassLoader());
+        int tmpMsgStatusEnum = in.readInt();
+        this.msgStatusEnum = tmpMsgStatusEnum == -1 ? null : MsgStatusEnum.values()[tmpMsgStatusEnum];
+    }
+
+    public static final Parcelable.Creator<CustomChatMessage> CREATOR = new Parcelable.Creator<CustomChatMessage>() {
+        @Override
+        public CustomChatMessage createFromParcel(Parcel source) {
+            return new CustomChatMessage(source);
+        }
+
+        @Override
+        public CustomChatMessage[] newArray(int size) {
+            return new CustomChatMessage[size];
+        }
+    };
 }

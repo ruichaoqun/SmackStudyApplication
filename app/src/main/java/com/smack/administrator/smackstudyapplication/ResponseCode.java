@@ -22,4 +22,6 @@ package com.smack.administrator.smackstudyapplication;
 public class ResponseCode {
     public static final short RES_SUCCESS = 200;
     public static final short RES_EXCEPTION = 1000;
+    public static final short ERROR_GET_CHAT = 1001;//创建聊天窗口失败
+
 }

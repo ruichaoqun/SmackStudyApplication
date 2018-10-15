@@ -61,6 +61,33 @@ public class ChatDbManagerImpl implements ChatDbManager{
     }
 
     /**
+     * 更新好友列表
+     * @param chatUsers
+     */
+    @Override
+    public void updateContactList(List<ChatUser> chatUsers){
+        daoSession.getChatUserDao().saveInTx(chatUsers);
+    }
+
+    /**
+     * 获取与该账号对应的会话id
+     * @param targetUserName
+     */
+    @Override
+    public long getConversationId(String currentUserName,String targetUserName,String jid) {
+        ConversationInfo conversationInfo = daoSession.getConversationInfoDao().queryBuilder().where(ConversationInfoDao.Properties.UserName.eq(currentUserName),
+                ConversationInfoDao.Properties.ChatUserName.eq(targetUserName)).build().unique();
+        if(conversationInfo != null){
+            return conversationInfo.getId();
+        }else{
+            ConversationInfo info = new ConversationInfo();
+            info.newConversationInfo(currentUserName,targetUserName,jid);
+            long conversationId = daoSession.getConversationInfoDao().insert(info);
+            return conversationId;
+        }
+    }
+
+    /**
      * 获取当前用户所有会话列表
      * @param userName username 当前登录账号
      */

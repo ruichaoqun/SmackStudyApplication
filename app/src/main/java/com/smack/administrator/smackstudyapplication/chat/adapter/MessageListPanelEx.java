@@ -1073,7 +1073,7 @@ public class MessageListPanelEx {
 //        adapter.deleteItem(messageItem, isRelocateTime);
 //    }
 
-//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
 //        if (resultCode != Activity.RESULT_OK) {
 //            return;
 //        }
@@ -1088,7 +1088,7 @@ public class MessageListPanelEx {
 //                    break;
 //            }
 //        }
-//    }
+    }
 
     // 转发消息
 //    private void doForwardMessage(final String sessionId, SessionTypeEnum sessionTypeEnum) {

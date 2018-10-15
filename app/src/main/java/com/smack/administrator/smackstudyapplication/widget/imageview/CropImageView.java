@@ -13,7 +13,8 @@ import android.view.MotionEvent;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 
-import com.netease.nim.uikit.common.util.file.AttachmentStore;
+
+import com.smack.administrator.smackstudyapplication.util.file.AttachmentStore;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

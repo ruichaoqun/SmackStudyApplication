@@ -79,7 +79,7 @@ public class EasyEditDialog extends Dialog {
 
     public EasyEditDialog(Context context, int style) {
         this(context, -1, style);
-        mResourceId = R.layout.nim_easy_alert_dialog_with_edit_text;
+        mResourceId = R.layout.xmpp_easy_alert_dialog_with_edit_text;
     }
 
     public EasyEditDialog(Context context) {

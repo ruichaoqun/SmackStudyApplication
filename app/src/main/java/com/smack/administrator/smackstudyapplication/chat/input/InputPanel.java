@@ -76,7 +76,6 @@ public class InputPanel implements IEmoticonSelectedListener,  AitTextChangeList
     private ChatUser user;//聊天对象
     private long conversationId;//会话id
 
-    private SessionCustomization customization;
 
     // 表情
     protected EmoticonPickerView emoticonPickerView;  // 贴图表情控件
@@ -160,16 +159,8 @@ public class InputPanel implements IEmoticonSelectedListener,  AitTextChangeList
         }
     }
 
-    public void setCustomization(SessionCustomization customization) {
-        this.customization = customization;
-        if (customization != null) {
-            emoticonPickerView.setWithSticker(customization.withSticker);
-        }
-    }
-
-    public void reload(Container container, SessionCustomization customization) {
+    public void reload(Container container) {
         this.container = container;
-        setCustomization(customization);
     }
 
     private void initViews() {

@@ -95,4 +95,19 @@ public interface ChatDbManager {
      * @return
      */
     public boolean insertOrUpdateConversation(ConversationInfo conversationInfo);
+
+    /**
+     * 更新好友列表
+     * @param chatUsers 好友集合
+     */
+    public void updateContactList(List<ChatUser> chatUsers);
+
+    /**
+     *
+     * @param currentUserName 当前登录的账号
+     * @param targetUserName 会话对象的账号
+     * @return
+     */
+    public long getConversationId(String currentUserName,String targetUserName,String jid);
+
 }

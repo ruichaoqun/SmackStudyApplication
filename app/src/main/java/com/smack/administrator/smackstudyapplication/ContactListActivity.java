@@ -32,20 +32,20 @@ public class ContactListActivity extends AppCompatActivity {
     }
 
     private void initData() {
-        XmppConnection.getInstance().getAllEntries()
-                .subscribe(new Consumer<List<RosterEntry>>() {
-                    @Override
-                    public void accept(List<RosterEntry> rosterEntries) throws Exception {
-                        chatUsers = rosterEntries;
-                        Adapter adapter = new Adapter();
-                        recyclerView.setAdapter(adapter);
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(Throwable throwable) throws Exception {
-
-                    }
-                });
+//        XmppConnection.getInstance().getAllEntries()
+//                .subscribe(new Consumer<List<RosterEntry>>() {
+//                    @Override
+//                    public void accept(List<RosterEntry> rosterEntries) throws Exception {
+//                        chatUsers = rosterEntries;
+//                        Adapter adapter = new Adapter();
+//                        recyclerView.setAdapter(adapter);
+//                    }
+//                }, new Consumer<Throwable>() {
+//                    @Override
+//                    public void accept(Throwable throwable) throws Exception {
+//
+//                    }
+//                });
     }
 
 

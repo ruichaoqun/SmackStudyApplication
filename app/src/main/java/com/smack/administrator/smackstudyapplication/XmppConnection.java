@@ -34,7 +34,9 @@ import org.jxmpp.jid.parts.Localpart;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -44,6 +46,7 @@ import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
 
@@ -81,7 +84,7 @@ public class XmppConnection {
     private ChatDbManager chatDbManager;
     private Roster mRoster;                     //好友管理类
     private Gson gson = new Gson();
-    private List<ChatUser> chatUsers;
+    private Map<String,ChatUser> chatUserMap;
 
 
     private ConnectionListener connectionListener = new ConnectionListener() {
@@ -242,8 +245,8 @@ public class XmppConnection {
                                 connection.login(account, password );
                                 //设置在线状态
                                 setPresence(0);
-                                initChatUsers();
                                 currentUserName = account;
+                                initChatUsers();
                                 emitter.onNext(true);
                             }
                         });
@@ -254,7 +257,15 @@ public class XmppConnection {
     }
 
     private void initChatUsers() {
-        chatUsers = chatDbManager.getContactList(currentUserName);
+        if(chatUserMap == null){
+            chatUserMap = new HashMap<>();
+        }
+        List<ChatUser> users = chatDbManager.getContactList(currentUserName);
+        if(users != null){
+            for (ChatUser user: users) {
+                chatUserMap.put(user.getJid(),user);
+            }
+        }
     }
 
     /**
@@ -359,7 +370,7 @@ public class XmppConnection {
      *
      * @return List<RosterEntry>
      */
-    public Observable<List<RosterEntry>> getAllEntries() {
+    public Observable<List<ChatUser>> getAllEntries() {
         return Observable.just("")
                 .filter(new Predicate<String>() {
                     @Override
@@ -367,24 +378,43 @@ public class XmppConnection {
                         return isAuthenticated();
                     }
                 })
-                .compose(new ObservableTransformer<String, List<RosterEntry>>() {
+                .map(new Function<String, List<RosterEntry>>() {
                     @Override
-                    public ObservableSource<List<RosterEntry>> apply(Observable<String> upstream) {
-                        return Observable.create(new ObservableOnSubscribe<List<RosterEntry>>() {
-                            @Override
-                            public void subscribe(ObservableEmitter<List<RosterEntry>> emitter) throws Exception {
-                                Collection<RosterEntry> rosterEntry = Roster.getInstanceFor(connection).getEntries();
-                                List<RosterEntry> entryList = new ArrayList<>();
-                                for (RosterEntry aRosterEntry : rosterEntry) {
-                                    entryList.add(aRosterEntry);
-                                }
-                                emitter.onNext(entryList);
+                    public List<RosterEntry> apply(String s) throws Exception {
+                        Collection<RosterEntry> rosterEntry = Roster.getInstanceFor(connection).getEntries();
+                        List<RosterEntry> entryList = new ArrayList<>();
+                        for (RosterEntry aRosterEntry : rosterEntry) {
+                            entryList.add(aRosterEntry);
+                        }
+                        return entryList;
+                    }
+                })
+                .map(new Function<List<RosterEntry>, List<ChatUser>>() {
+                    @Override
+                    public List<ChatUser> apply(List<RosterEntry> rosterEntries) throws Exception {
+                        List<ChatUser> users = new ArrayList<>();
+                        for (RosterEntry e :rosterEntries) {
+                            ChatUser user = chatUserMap.get(e.getJid().toString());
+                            if(user == null){
+                                user = new ChatUser();
+                                user.setUserNick(e.getName());
+                                user.setJid(e.getJid().toString());
+                                user.setUserName(e.getJid().toString().split("@")[0]);
+                                user.setChatUserName(XmppConnection.getInstance().currentUserName);
                             }
-                        });
+                            users.add(user);
+                        }
+                        chatDbManager.updateContactList(users);
+                        initChatUsers();
+                        return users;
                     }
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
+    }
+
+    public long getConversationId(String targetUserName,String jid){
+        return chatDbManager.getConversationId(currentUserName,targetUserName,jid);
     }
 
     /**
@@ -393,6 +423,7 @@ public class XmppConnection {
      * @param JID JID
      * @return Chat
      */
+    @Deprecated
     public Observable<Chat> getFriendChat(final String JID) {
         return Observable.just("")
                 .filter(new Predicate<String>() {
@@ -484,8 +515,14 @@ public class XmppConnection {
     }
 
     public ChatUser getUserInfo(String account) {
-        if(account != null && chatUsers != null){
-            for (ChatUser us : chatUsers) {
+        if(TextUtils.equals(account,currentUserName)){
+            ChatUser us = new ChatUser();
+            us.setUserNick("芮超群");
+            us.setUserName(account);
+            return us;
+        }
+        if(account != null && chatUserMap != null){
+            for (ChatUser us : chatUserMap.values()) {
                 if(TextUtils.equals(account,us.getUserName())){
                     return us;
                 }

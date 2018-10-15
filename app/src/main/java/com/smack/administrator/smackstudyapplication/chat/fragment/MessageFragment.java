@@ -13,15 +13,24 @@ import com.netease.nimlib.sdk.Observer;
 import com.netease.nimlib.sdk.msg.constant.SessionTypeEnum;
 import com.netease.nimlib.sdk.msg.model.MessageReceipt;
 import com.smack.administrator.smackstudyapplication.R;
+import com.smack.administrator.smackstudyapplication.ResponseCode;
 import com.smack.administrator.smackstudyapplication.XmppConnection;
 import com.smack.administrator.smackstudyapplication.base.TFragment;
 import com.smack.administrator.smackstudyapplication.chat.Container;
 import com.smack.administrator.smackstudyapplication.chat.ModuleProxy;
+import com.smack.administrator.smackstudyapplication.chat.actions.BaseAction;
+import com.smack.administrator.smackstudyapplication.chat.actions.ImageAction;
 import com.smack.administrator.smackstudyapplication.chat.adapter.MessageListPanelEx;
 import com.smack.administrator.smackstudyapplication.chat.constant.Extras;
 import com.smack.administrator.smackstudyapplication.chat.input.InputPanel;
 import com.smack.administrator.smackstudyapplication.chat.session.SessionCustomization;
+import com.smack.administrator.smackstudyapplication.dao.ChatUser;
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
+
+import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.chat2.ChatManager;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,16 +47,17 @@ public class MessageFragment extends TFragment implements ModuleProxy {
 
     private View rootView;
 
-    private SessionCustomization customization;
-
     protected static final String TAG = "MessageActivity";
 
     // 聊天对象
-    protected String sessionId; // p2p对方Account或者群id
+    protected String jid; // 聊天对象的JID
+    protected ChatUser user;
 
     // modules
     protected InputPanel inputPanel;
     protected MessageListPanelEx messageListPanel;
+    private Chat chat;
+    private long conversationId;
 
 
     @Override
@@ -107,10 +117,22 @@ public class MessageFragment extends TFragment implements ModuleProxy {
     }
 
     private void parseIntent() {
-        sessionId = getArguments().getString(Extras.EXTRA_ACCOUNT);
+        jid = getArguments().getString(Extras.EXTRA_JID);
+        conversationId = getArguments().getLong(Extras.EXTRA_CONVERSATION_ID);
+        user = getArguments().getParcelable(Extras.EXTRA_CHAT_USER);
         CustomChatMessage anchor = (CustomChatMessage) getArguments().getSerializable(Extras.EXTRA_ANCHOR);
 
-        Container container = new Container(getActivity(), sessionId,this);
+        Container container = new Container(getActivity(), jid,this);
+
+
+        if(!TextUtils.isEmpty(jid)){
+            try {
+                chat = XmppConnection.getInstance().getChatManager().chatWith(JidCreate.entityBareFrom(jid));
+            } catch (XmppStringprepException e) {
+                onError(ResponseCode.ERROR_GET_CHAT);
+                e.printStackTrace();
+            }
+        }
 
         if (messageListPanel == null) {
             messageListPanel = new MessageListPanelEx(container, rootView, anchor, false, false);
@@ -118,16 +140,21 @@ public class MessageFragment extends TFragment implements ModuleProxy {
             messageListPanel.reload(container, anchor);
         }
 
-
-
-
-
+        if (inputPanel == null) {
+            inputPanel = new InputPanel(container, rootView, getActionList(),user,conversationId);
+        } else {
+            inputPanel.reload(container);
+        }
         registerObservers(true);
-
-
     }
 
-
+    private void onError( short errorGetChat) {
+        switch (errorGetChat){
+            case ResponseCode.ERROR_GET_CHAT:
+                //创建聊天窗口失败
+                break;
+        }
+    }
 
 
     /**
@@ -149,14 +176,12 @@ public class MessageFragment extends TFragment implements ModuleProxy {
             }
 
             messageListPanel.onIncomingMessage(messages);
-            sendMsgReceipt(); // 发送已读回执
         }
     };
 
     private Observer<List<MessageReceipt>> messageReceiptObserver = new Observer<List<MessageReceipt>>() {
         @Override
         public void onEvent(List<MessageReceipt> messageReceipts) {
-            receiveReceipt();
         }
     };
 
@@ -167,7 +192,7 @@ public class MessageFragment extends TFragment implements ModuleProxy {
     @Override
     public boolean sendMessage(CustomChatMessage message) {
         final CustomChatMessage msg = message;
-        XmppConnection.getInstance().sendMessage(message)
+        XmppConnection.getInstance().sendMessage(chat,msg)
                 .subscribe(new Consumer<Boolean>() {
                     @Override
                     public void accept(Boolean aBoolean) throws Exception {
@@ -181,54 +206,6 @@ public class MessageFragment extends TFragment implements ModuleProxy {
                 });
         messageListPanel.onMsgSend(message);
         return true;
-    }
-
-    // 被对方拉入黑名单后，发消息失败的交互处理
-    private void sendFailWithBlackList(int code, CustomChatMessage msg) {
-        if (code == ResponseCode.RES_IN_BLACK_LIST) {
-            // 如果被对方拉入黑名单，发送的消息前不显示重发红点
-            msg.setStatus(MsgStatusEnum.success);
-            NIMClient.getService(MsgService.class).updateCustomChatMessageStatus(msg);
-            messageListPanel.refreshMessageList();
-            // 同时，本地插入被对方拒收的tip消息
-            CustomChatMessage tip = MessageBuilder.createTipMessage(msg.getSessionId(), msg.getSessionType());
-            tip.setContent(getActivity().getString(R.string.black_list_send_tip));
-            tip.setStatus(MsgStatusEnum.success);
-            CustomMessageConfig config = new CustomMessageConfig();
-            config.enableUnreadCount = false;
-            tip.setConfig(config);
-            NIMClient.getService(MsgService.class).saveMessageToLocal(tip, true);
-        }
-    }
-
-    private CustomChatMessage changeToRobotMsg(CustomChatMessage message) {
-        if (aitManager == null) {
-            return message;
-        }
-        if (message.getMsgType() == MsgTypeEnum.robot) {
-            return message;
-        }
-        if (isChatWithRobot()) {
-            if (message.getMsgType() == MsgTypeEnum.text && message.getContent() != null) {
-                String content = message.getContent().equals("") ? " " : message.getContent();
-                message = MessageBuilder.createRobotMessage(message.getSessionId(), message.getSessionType(), message.getSessionId(), content, RobotMsgType.TEXT, content, null, null);
-            }
-        } else {
-            String robotAccount = aitManager.getAitRobot();
-            if (TextUtils.isEmpty(robotAccount)) {
-                return message;
-            }
-            String text = message.getContent();
-            String content = aitManager.removeRobotAitString(text, robotAccount);
-            content = content.equals("") ? " " : content;
-            message = MessageBuilder.createRobotMessage(message.getSessionId(), message.getSessionType(), robotAccount, text, RobotMsgType.TEXT, content, null, null);
-
-        }
-        return message;
-    }
-
-    private boolean isChatWithRobot() {
-        return NimUIKitImpl.getRobotInfoProvider().getRobotByAccount(sessionId) != null;
     }
 
 
@@ -249,22 +226,12 @@ public class MessageFragment extends TFragment implements ModuleProxy {
 
     @Override
     public void onItemFooterClick(CustomChatMessage message) {
-        if (aitManager == null) {
-            return;
-        }
-        if (messageListPanel.isSessionMode()) {
-            RobotAttachment attachment = (RobotAttachment) message.getAttachment();
-            NimRobotInfo robot = NimUIKitImpl.getRobotInfoProvider().getRobotByAccount(attachment.getFromRobotAccount());
-            aitManager.insertAitRobot(robot.getAccount(), robot.getName(), inputPanel.getEditSelectionStart());
-        }
+
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (aitManager != null) {
-            aitManager.onActivityResult(requestCode, resultCode, data);
-        }
         inputPanel.onActivityResult(requestCode, resultCode, data);
         messageListPanel.onActivityResult(requestCode, resultCode, data);
     }
@@ -273,26 +240,12 @@ public class MessageFragment extends TFragment implements ModuleProxy {
     protected List<BaseAction> getActionList() {
         List<BaseAction> actions = new ArrayList<>();
         actions.add(new ImageAction());
-        actions.add(new VideoAction());
-        actions.add(new LocationAction());
+//        actions.add(new VideoAction());
+//        actions.add(new LocationAction());
 
-        if (customization != null && customization.actions != null) {
-            actions.addAll(customization.actions);
-        }
+//        if (customization != null && customization.actions != null) {
+//            actions.addAll(customization.actions);
+//        }
         return actions;
-    }
-
-    /**
-     * 发送已读回执
-     */
-    private void sendMsgReceipt() {
-        messageListPanel.sendReceipt();
-    }
-
-    /**
-     * 收到已读回执
-     */
-    public void receiveReceipt() {
-        messageListPanel.receiveReceipt();
     }
 }
