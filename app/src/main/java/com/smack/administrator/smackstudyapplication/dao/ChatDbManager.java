@@ -46,6 +46,16 @@ public interface ChatDbManager {
     public List<CustomChatMessage> getMessage(long conversationId);
 
     /**
+     * 通过对方账号获取消息列表
+     * @param userName 自己的账号
+     * @param targetUserName 对方的账号
+     * @return
+     */
+    public List<CustomChatMessage> getMessage(String userName, String targetUserName);
+
+
+
+    /**
      * 当收到新消息时，更新会话列表
      * @param message
      * @param userName

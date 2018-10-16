@@ -7,6 +7,9 @@ import com.smack.administrator.smackstudyapplication.MessageUtils;
 
 import org.jxmpp.jid.EntityBareJid;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -113,6 +116,31 @@ public class ChatDbManagerImpl implements ChatDbManager{
         return info.getMessages();
     }
 
+    /**
+     * 通过对方账号获取消息列表
+     * @param userName 自己的账号
+     * @param targetUserName 对方的账号
+     * @return
+     */
+    @Override
+    public List<CustomChatMessage> getMessage(String userName, String targetUserName) {
+        List<CustomChatMessage> messageList = new ArrayList<>();
+        messageList.addAll(daoSession.getCustomChatMessageDao().queryBuilder()
+                .where(CustomChatMessageDao.Properties.SendUserName.eq(userName),
+                        CustomChatMessageDao.Properties.RecieveUserName.eq(targetUserName)).build().list());
+        messageList.addAll(daoSession.getCustomChatMessageDao().queryBuilder()
+                .where(CustomChatMessageDao.Properties.SendUserName.eq(targetUserName),
+                        CustomChatMessageDao.Properties.RecieveUserName.eq(userName)).build().list());
+        Collections.sort(messageList, new Comparator<CustomChatMessage>() {
+            @Override
+            public int compare(CustomChatMessage o1, CustomChatMessage o2) {
+                return (int) (o1.getTime() - o2.getTime());
+            }
+        });
+        return messageList;
+    }
+
+    // 新消息到达后更新会话列表
     @Override
     public Long insertOrUpdateConversation(CustomChatMessage message, String userName, EntityBareJid jid) {
         String targetUserName = TextUtils.equals(userName,message.getSendUserName())?message.getRecieveUserName():message.getSendUserName();
@@ -158,7 +186,6 @@ public class ChatDbManagerImpl implements ChatDbManager{
     @Override
     public Long saveMessage(CustomChatMessage message) {
         Long l = daoSession.getCustomChatMessageDao().insert(message);
-        daoSession.getCustomChatMessageDao().deleteAll();
         return l;
     }
 

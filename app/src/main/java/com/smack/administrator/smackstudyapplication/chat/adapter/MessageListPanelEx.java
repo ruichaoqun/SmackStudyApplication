@@ -14,6 +14,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.smack.administrator.smackstudyapplication.R;
 import com.smack.administrator.smackstudyapplication.RequestCallback;
 import com.smack.administrator.smackstudyapplication.RequestCallbackWrapper;
@@ -37,6 +38,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import io.reactivex.Observer;
+import io.reactivex.functions.Consumer;
 
 /**
  * 基于RecyclerView的消息收发模块
@@ -58,11 +60,9 @@ public class MessageListPanelEx {
     private ImageView listviewBk;
 
     private Handler uiHandler;
+    private Gson gson = new Gson();
 
-    // 仅显示消息记录，不接收和发送消息
-    private boolean recordOnly;
-    // 从服务器拉取消息记录
-    private boolean remote;
+    private long conversationId;
 
     // 语音转文字
 //    private VoiceTrans voiceTrans;
@@ -78,15 +78,14 @@ public class MessageListPanelEx {
     //所以消息会重复
     private boolean mIsInitFetchingLocal;
 
-    public MessageListPanelEx(Container container, View rootView, boolean recordOnly, boolean remote) {
-        this(container, rootView, null, recordOnly, remote);
+    public MessageListPanelEx(Container container, View rootView, long conversationId) {
+        this(container, rootView, null, conversationId);
     }
 
-    public MessageListPanelEx(Container container, View rootView, CustomChatMessage anchor, boolean recordOnly, boolean remote) {
+    public MessageListPanelEx(Container container, View rootView, CustomChatMessage anchor,long conversationId) {
         this.container = container;
         this.rootView = rootView;
-        this.recordOnly = recordOnly;
-        this.remote = remote;
+        this.conversationId = conversationId;
 
         init(anchor);
     }
@@ -206,10 +205,6 @@ public class MessageListPanelEx {
         }
     };
 
-    public boolean isSessionMode() {
-        return !recordOnly && !remote;
-    }
-
     private void initFetchLoadListener(CustomChatMessage anchor) {
         MessageLoader loader = new MessageLoader(anchor);
         // 只下来加载old数据
@@ -240,33 +235,16 @@ public class MessageListPanelEx {
         messageListView.scrollToPosition(adapter.getBottomDataPosition());
     }
 
-    public void onIncomingMessage(List<CustomChatMessage> messages) {
+    public void onIncomingMessage(CustomChatMessage message) {
         boolean needScrollToBottom = isLastMessageVisible();
-        boolean needRefresh = false;
-        List<CustomChatMessage> addedListItems = new ArrayList<>(messages.size());
-        for (CustomChatMessage message : messages) {
-            if (isMyMessage(message)) {
-                items.add(message);
-                addedListItems.add(message);
-                needRefresh = true;
-            }
-        }
-        if (needRefresh) {
-            sortMessages(items);
-            adapter.notifyDataSetChanged();
-        }
+        List<CustomChatMessage> addedListItems = new ArrayList<>(1);
+        items.add(message);
+        addedListItems.add(message);
+        sortMessages(items);
+        adapter.notifyDataSetChanged();
 
-        adapter.updateShowTimeItem(addedListItems, false, true);
-
-        // incoming messages tip
-        CustomChatMessage lastMsg = messages.get(messages.size() - 1);
-        if (isMyMessage(lastMsg)) {
-            if (needScrollToBottom) {
-                doScrollToBottom();
-            }
-//            else if (incomingMsgPrompt != null && lastMsg.getSessionType() != SessionTypeEnum.ChatRoom) {
-//                incomingMsgPrompt.show(lastMsg);
-//            }
+        if(needScrollToBottom){
+            doScrollToBottom();
         }
     }
 
@@ -282,7 +260,6 @@ public class MessageListPanelEx {
         List<CustomChatMessage> addedListItems = new ArrayList<>(1);
         addedListItems.add(message);
         adapter.updateShowTimeItem(addedListItems, false, true);
-
         adapter.appendData(message);
 
         doScrollToBottom();
@@ -410,7 +387,6 @@ public class MessageListPanelEx {
             // resend的的情况，可能时间已经变化了，这里要重新检查是否要显示时间
             List<CustomChatMessage> msgList = new ArrayList<>(1);
             msgList.add(message);
-            adapter.updateShowTimeItem(msgList, false, true);
 
             refreshViewHolderByIndex(index);
         }
@@ -542,12 +518,28 @@ public class MessageListPanelEx {
 //                    });
         }
 
-        private void loadFromLocal(QueryDirectionEnum direction) {
+        private void loadFromLocal(final QueryDirectionEnum direction) {
             if (mIsInitFetchingLocal) {
                 return;
             }
-//            NIMClient.getService(MsgService.class).queryMessageListEx(anchor(), direction, loadMsgCount, true)
-//                    .setCallback(callback);
+            XmppConnection.getInstance().loadLocalMessage(conversationId)
+                    .subscribe(new Consumer<List<CustomChatMessage>>() {
+                        @Override
+                        public void accept(List<CustomChatMessage> customChatMessages) throws Exception {
+                            mIsInitFetchingLocal = false;
+                            onMessageLoaded(customChatMessages);
+                        }
+                    }, new Consumer<Throwable>() {
+                        @Override
+                        public void accept(Throwable throwable) throws Exception {
+                            mIsInitFetchingLocal = false;
+                            if (direction == QueryDirectionEnum.QUERY_OLD) {
+                                adapter.fetchMoreFailed();
+                            } else if (direction == QueryDirectionEnum.QUERY_NEW) {
+                                adapter.loadMoreFail();
+                            }
+                        }
+                    });
         }
 
 
@@ -559,56 +551,30 @@ public class MessageListPanelEx {
 
             boolean noMoreMessage = messages.size() < loadMsgCount;
 
-            if (remote) {
-                Collections.reverse(messages);
-            }
-
-            // 在第一次加载的过程中又收到了新消息，做一下去重
-            if (firstLoad && items.size() > 0) {
-                for (CustomChatMessage message : messages) {
-                    int removeIndex = 0;
-                    for (CustomChatMessage item : items) {
-                        if (TextUtils.equals(item.getUuid(),message.getUuid())) {
-                            adapter.remove(removeIndex);
-                            break;
-                        }
-                        removeIndex++;
-                    }
-                }
-            }
-
-            // 加入anchor
-            if (firstLoad && anchor != null) {
-                messages.add(anchor);
-            }
+//            // 在第一次加载的过程中又收到了新消息，做一下去重
+//            if (firstLoad && items.size() > 0) {
+//                for (CustomChatMessage message : messages) {
+//                    int removeIndex = 0;
+//                    for (CustomChatMessage item : items) {
+//                        if (TextUtils.equals(item.getUuid(),message.getUuid())) {
+//                            adapter.remove(removeIndex);
+//                            break;
+//                        }
+//                        removeIndex++;
+//                    }
+//                }
+//            }
 
             // 在更新前，先确定一些标记
             List<CustomChatMessage> total = new ArrayList<>();
-            total.addAll(items);
-            boolean isBottomLoad = direction == QueryDirectionEnum.QUERY_NEW;
-            if (isBottomLoad) {
-                total.addAll(messages);
-            } else {
-                total.addAll(0, messages);
-            }
-            adapter.updateShowTimeItem(total, true, firstLoad); // 更新要显示时间的消息
+            total.addAll(0, messages);
 //            updateReceipt(total); // 更新已读回执标签
 
-            // 加载状态修改,刷新界面
-            if (isBottomLoad) {
-                // 底部加载
-                if (noMoreMessage) {
-                    adapter.loadMoreEnd(messages, true);
-                } else {
-                    adapter.loadMoreComplete(messages);
-                }
+
+            if (noMoreMessage) {
+                adapter.fetchMoreEnd(messages, true);
             } else {
-                // 顶部加载
-                if (noMoreMessage) {
-                    adapter.fetchMoreEnd(messages, true);
-                } else {
-                    adapter.fetchMoreComplete(messages);
-                }
+                adapter.fetchMoreComplete(messages);
             }
 
             // 如果是第一次加载，updateShowTimeItem返回的就是lastShowTimeItem
@@ -625,9 +591,9 @@ public class MessageListPanelEx {
                 return;
             }
 
-            if (remote) {
-                Collections.reverse(messages);
-            }
+//            if (remote) {
+//                Collections.reverse(messages);
+//            }
 
             int loadCount = messages.size();
             if (firstLoad && anchor != null) {
@@ -635,7 +601,6 @@ public class MessageListPanelEx {
             }
 
             // 在更新前，先确定一些标记
-            adapter.updateShowTimeItem(messages, true, firstLoad); // 更新要显示时间的消息
 //            updateReceipt(messages); // 更新已读回执标签
 
             // new data
@@ -657,9 +622,7 @@ public class MessageListPanelEx {
         @Override
         public void onLoadMoreRequested() {
             // 底部加载新数据
-            if (!remote) {
-                loadFromLocal(QueryDirectionEnum.QUERY_NEW);
-            }
+            loadFromLocal(QueryDirectionEnum.QUERY_NEW);
         }
     }
 

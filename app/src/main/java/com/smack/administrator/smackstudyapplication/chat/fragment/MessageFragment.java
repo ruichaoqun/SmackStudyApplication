@@ -29,6 +29,10 @@ import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
 
 import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.chat2.ChatManager;
+import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
+import org.jivesoftware.smack.chat2.OutgoingChatMessageListener;
+import org.jivesoftware.smack.packet.Message;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 
@@ -94,12 +98,14 @@ public class MessageFragment extends TFragment implements ModuleProxy {
     public void onDestroy() {
         super.onDestroy();
         messageListPanel.onDestroy();
-        registerObservers(false);
+        unRegisterMessageListener();
         if (inputPanel != null) {
             inputPanel.onDestroy();
         }
 
     }
+
+
 
     public boolean onBackPressed() {
         if (inputPanel.collapse(true)) {
@@ -135,7 +141,7 @@ public class MessageFragment extends TFragment implements ModuleProxy {
         }
 
         if (messageListPanel == null) {
-            messageListPanel = new MessageListPanelEx(container, rootView, anchor, false, false);
+            messageListPanel = new MessageListPanelEx(container, rootView,conversationId);
         } else {
             messageListPanel.reload(container, anchor);
         }
@@ -145,7 +151,7 @@ public class MessageFragment extends TFragment implements ModuleProxy {
         } else {
             inputPanel.reload(container);
         }
-        registerObservers(true);
+        registerMessageListener();
     }
 
     private void onError( short errorGetChat) {
@@ -161,27 +167,34 @@ public class MessageFragment extends TFragment implements ModuleProxy {
      * ****************** 观察者 **********************
      */
 
-    private void registerObservers(boolean register) {
-
+    private void registerMessageListener() {
+        XmppConnection.getInstance().setOutgoingMessageListener(outgoingChatMessageListener);
+        XmppConnection.getInstance().setIncomingMessageListener(incomingChatMessageListener);
     }
 
-    /**
-     * 消息接收观察者
-     */
-    Observer<List<CustomChatMessage>> incomingMessageObserver = new Observer<List<CustomChatMessage>>() {
-        @Override
-        public void onEvent(List<CustomChatMessage> messages) {
-            if (messages == null || messages.isEmpty()) {
-                return;
-            }
+    private void unRegisterMessageListener() {
+        XmppConnection.getInstance().setOutgoingMessageListener(null);
+        XmppConnection.getInstance().setIncomingMessageListener(null);
+    }
 
-            messageListPanel.onIncomingMessage(messages);
+    //消息发送成功回调
+    XmppConnection.XmppOutgoingChatMessageListener outgoingChatMessageListener = new XmppConnection.XmppOutgoingChatMessageListener() {
+        @Override
+        public void newOutgoingMessage(EntityBareJid to, CustomChatMessage message, Chat chat) {
+            if(message != null && TextUtils.equals(to.toString(),user.getJid())){
+                //更新消息状态
+                messageListPanel.onMsgSend(message);
+            }
         }
     };
 
-    private Observer<List<MessageReceipt>> messageReceiptObserver = new Observer<List<MessageReceipt>>() {
+    //新消息接收回调
+    XmppConnection.XmppIncomingChatMessageListener incomingChatMessageListener = new XmppConnection.XmppIncomingChatMessageListener() {
         @Override
-        public void onEvent(List<MessageReceipt> messageReceipts) {
+        public void newIncomingMessage(EntityBareJid from, CustomChatMessage message, Chat chat) {
+            if(message != null && TextUtils.equals(from.toString(),user.getJid())){
+                messageListPanel.onIncomingMessage(message);
+            }
         }
     };
 

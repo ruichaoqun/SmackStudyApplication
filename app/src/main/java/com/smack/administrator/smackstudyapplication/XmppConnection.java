@@ -9,6 +9,7 @@ import com.google.gson.Gson;
 import com.smack.administrator.smackstudyapplication.dao.ChatDbManager;
 import com.smack.administrator.smackstudyapplication.dao.ChatDbManagerImpl;
 import com.smack.administrator.smackstudyapplication.dao.ChatUser;
+import com.smack.administrator.smackstudyapplication.dao.ConversationInfo;
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -16,6 +17,7 @@ import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
@@ -27,9 +29,12 @@ import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqregister.AccountManager;
+import org.jivesoftware.smackx.vcardtemp.VCardManager;
+import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Localpart;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -85,6 +90,9 @@ public class XmppConnection {
     private Roster mRoster;                     //好友管理类
     private Gson gson = new Gson();
     private Map<String,ChatUser> chatUserMap;
+    private List<OnMessageListUpdateListener> messageListUpdateListeners = new ArrayList<>();
+    private XmppIncomingChatMessageListener incomingMessageListener;
+    private XmppOutgoingChatMessageListener outgoingMessageListener;
 
 
     private ConnectionListener connectionListener = new ConnectionListener() {
@@ -112,7 +120,10 @@ public class XmppConnection {
     private IncomingChatMessageListener incomingChatMessageListener = new IncomingChatMessageListener() {
         @Override
         public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
-            saveMessage(from,message);
+            CustomChatMessage customChatMessage = saveMessage(from,message);
+            if(customChatMessage != null && incomingMessageListener != null){
+                incomingMessageListener.newIncomingMessage(from,customChatMessage,chat);
+            }
         }
     };
 
@@ -121,11 +132,15 @@ public class XmppConnection {
     private OutgoingChatMessageListener outgoingChatMessageListener = new OutgoingChatMessageListener() {
         @Override
         public void newOutgoingMessage(EntityBareJid to, Message message, Chat chat) {
-            saveMessage(to,message);
+            CustomChatMessage customChatMessage = saveMessage(to,message);
+            if(customChatMessage != null && outgoingMessageListener != null){
+                outgoingMessageListener.newOutgoingMessage(to,customChatMessage,chat);
+            }
         }
     };
 
-    private void saveMessage(EntityBareJid jid, Message message) {
+    private CustomChatMessage saveMessage(EntityBareJid jid, Message message) {
+        // 收到消息后先存储，后通知
         String body = message.getBody();
         CustomChatMessage customChatMessage = null;
         try {
@@ -134,12 +149,14 @@ public class XmppConnection {
                 long conversationId = chatDbManager.insertOrUpdateConversation(customChatMessage,TestData.TEST_USERNAME,jid);
                 customChatMessage.setConversationId(conversationId);
                 chatDbManager.saveMessage(customChatMessage);
+                for (int i = 0; i < messageListUpdateListeners.size(); i++) {
+                    messageListUpdateListeners.get(i).onMessageListUpdate(customChatMessage);
+                }
             }
         }catch (Exception e){
             e.printStackTrace();
         }
-        if(customChatMessage == null){
-        }
+        return customChatMessage;
     }
 
 
@@ -420,29 +437,23 @@ public class XmppConnection {
     /**
      * 创建聊天窗口
      *
-     * @param JID JID
+     * @param jid JID
      * @return Chat
      */
     @Deprecated
-    public Observable<Chat> getFriendChat(final String JID) {
-        return Observable.just("")
+    public Observable<Chat> getFriendChat(final String jid) {
+        return Observable.just(jid)
                 .filter(new Predicate<String>() {
                     @Override
                     public boolean test(String s) throws Exception {
                         return isAuthenticated();
                     }
                 })
-                .compose(new ObservableTransformer<String, Chat>() {
+                .map(new Function<String, Chat>() {
                     @Override
-                    public ObservableSource<Chat> apply(Observable<String> upstream) {
-                        return Observable.create(new ObservableOnSubscribe<Chat>() {
-                            @Override
-                            public void subscribe(ObservableEmitter<Chat> emitter) throws Exception {
-                                Chat chat = ChatManager.getInstanceFor(connection)
-                                        .chatWith(JidCreate.entityBareFrom(JID));
-                                emitter.onNext(chat);
-                            }
-                        });
+                    public Chat apply(String s) throws Exception {
+                        return ChatManager.getInstanceFor(connection)
+                                .chatWith(JidCreate.entityBareFrom(jid));
                     }
                 })
                 .subscribeOn(Schedulers.io())
@@ -456,23 +467,36 @@ public class XmppConnection {
      * @param message 消息文本
      */
     public Observable<Boolean> sendMessage(final Chat chat, final CustomChatMessage message) {
-        return Observable.just("")
-                .filter(new Predicate<String>() {
+        return Observable.just(message)
+                .filter(new Predicate<CustomChatMessage>() {
                     @Override
-                    public boolean test(String s) throws Exception {
+                    public boolean test(CustomChatMessage s) throws Exception {
                         return isAuthenticated();
                     }
                 })
-                .compose(new ObservableTransformer<String, Boolean>() {
+                .map(new Function<CustomChatMessage, Boolean>() {
                     @Override
-                    public ObservableSource<Boolean> apply(Observable<String> upstream) {
-                        return Observable.create(new ObservableOnSubscribe<Boolean>() {
-                            @Override
-                            public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
-                                chat.send(gson.toJson(message));
-                                emitter.onNext(true);
-                            }
-                        });
+                    public Boolean apply(CustomChatMessage s) throws Exception {
+                        chat.send(gson.toJson(s));
+                        return true;
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+    }
+
+    public Observable<List<CustomChatMessage>> loadLocalMessage(final long conversationId){
+        return Observable.just(conversationId)
+                .filter(new Predicate<Long>() {
+                    @Override
+                    public boolean test(Long aLong) throws Exception {
+                        return isAuthenticated();
+                    }
+                })
+                .map(new Function<Long, List<CustomChatMessage>>() {
+                    @Override
+                    public List<CustomChatMessage> apply(Long aLong) throws Exception {
+                        return  chatDbManager.getMessage(conversationId);
                     }
                 })
                 .subscribeOn(Schedulers.io())
@@ -531,6 +555,11 @@ public class XmppConnection {
         return new ChatUser(currentUserName,account);
     }
 
+    public VCard getVCard(String jid) throws SmackException.NoResponseException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, XmppStringprepException {
+        EntityBareJid entityBareJid = JidCreate.entityBareFrom(jid);
+        return VCardManager.getInstanceFor(connection).loadVCard(entityBareJid);
+    }
+
 
 
 
@@ -551,6 +580,47 @@ public class XmppConnection {
 
     public String getCurrentUserName() {
         return currentUserName;
+    }
+
+    public ChatDbManager getChatDbManager() {
+        return chatDbManager;
+    }
+
+
+    public void setIncomingMessageListener(XmppIncomingChatMessageListener incomingMessageListener) {
+        this.incomingMessageListener = incomingMessageListener;
+    }
+
+    public void setOutgoingMessageListener(XmppOutgoingChatMessageListener outgoingMessageListener) {
+        this.outgoingMessageListener = outgoingMessageListener;
+    }
+
+    public interface XmppIncomingChatMessageListener{
+        public void newIncomingMessage(EntityBareJid from, CustomChatMessage message, Chat chat);
+    }
+
+    public interface XmppOutgoingChatMessageListener{
+        public void newOutgoingMessage(EntityBareJid to, CustomChatMessage message, Chat chat);
+    }
+
+    public void addOnMessageListUpdateListener(OnMessageListUpdateListener listUpdateListener){
+        messageListUpdateListeners.add(listUpdateListener);
+    }
+
+    public void removeOnMessageListUpdateListener(OnMessageListUpdateListener listUpdateListener){
+        messageListUpdateListeners.remove(listUpdateListener);
+    }
+
+    public interface OnMessageListUpdateListener{
+        void onMessageListUpdate(CustomChatMessage customChatMessage);
+    }
+
+    public interface onConversationUpdateListener{
+        void onConversationUpdate(ConversationInfo info);
+    }
+
+    public interface OnUnreadMessageUpdateListener{
+        void onUnreadMessageUpdate(int unReadNumber);
     }
 
 

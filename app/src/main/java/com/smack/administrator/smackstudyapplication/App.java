@@ -45,8 +45,8 @@ public class App extends Application {
         application = this;
         XmppConnection.getInstance().connect(this);
 
-        String appCacheDir = NimSDKOptionConfig.getAppCacheDir(this) + "/app";
-        StorageUtil.init(this, options.appCacheDir);
+        String appCacheDir = getAppCacheDir(this) + "/app";
+        StorageUtil.init(this, appCacheDir);
         ScreenUtil.init(this);
         // init log
         String path = StorageUtil.getDirectoryByDirType(StorageType.TYPE_LOG);
@@ -54,7 +54,7 @@ public class App extends Application {
 
     }
 
-    static String getAppCacheDir(Context context) {
+    private String getAppCacheDir(Context context) {
         String storageRootPath = null;
         try {
             // SD卡应用扩展存储区(APP卸载后，该目录下被清除，用户也可以在设置界面中手动清除)，请根据APP对数据缓存的重要性及生命周期来决定是否采用此缓存目录.
@@ -67,7 +67,7 @@ public class App extends Application {
         }
         if (TextUtils.isEmpty(storageRootPath)) {
             // SD卡应用公共存储区(APP卸载后，该目录不会被清除，下载安装APP后，缓存数据依然可以被加载。SDK默认使用此目录)，该存储区域需要写权限!
-            storageRootPath = Environment.getExternalStorageDirectory() + "/" + DemoCache.getContext().getPackageName();
+            storageRootPath = Environment.getExternalStorageDirectory() + "/" + context.getPackageName();
         }
 
         return storageRootPath;
