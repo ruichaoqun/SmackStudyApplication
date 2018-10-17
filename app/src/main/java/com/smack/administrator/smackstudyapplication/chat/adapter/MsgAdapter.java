@@ -119,8 +119,8 @@ public class MsgAdapter extends BaseMultiItemFetchLoadAdapter<CustomChatMessage,
     /**
      * 列表加入新消息时，更新时间显示
      */
-    public void updateShowTimeItem(List<CustomChatMessage> items, boolean fromStart, boolean update) {
-        CustomChatMessage anchor = fromStart ? null : lastShowTimeItem;
+    public void updateShowTimeItem(List<CustomChatMessage> items, boolean update) {
+        CustomChatMessage anchor = lastShowTimeItem;
         for (CustomChatMessage message : items) {
             if (setShowTimeFlag(message, anchor)) {
                 anchor = message;

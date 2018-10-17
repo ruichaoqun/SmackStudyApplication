@@ -139,24 +139,21 @@ public class XmppConnection {
         }
     };
 
-    private CustomChatMessage saveMessage(EntityBareJid jid, Message message) {
+    private CustomChatMessage saveMessage(CustomChatMessage message) {
         // 收到消息后先存储，后通知
-        String body = message.getBody();
-        CustomChatMessage customChatMessage = null;
         try {
-            customChatMessage =  gson.fromJson(body,CustomChatMessage.class);
-            if(customChatMessage != null){
-                long conversationId = chatDbManager.insertOrUpdateConversation(customChatMessage,TestData.TEST_USERNAME,jid);
-                customChatMessage.setConversationId(conversationId);
-                chatDbManager.saveMessage(customChatMessage);
+            if(message != null){
+                long conversationId = chatDbManager.insertOrUpdateConversation(message,TestData.TEST_USERNAME,jid);
+                message.setConversationId(conversationId);
+                chatDbManager.saveMessage(message);
                 for (int i = 0; i < messageListUpdateListeners.size(); i++) {
-                    messageListUpdateListeners.get(i).onMessageListUpdate(customChatMessage);
+                    messageListUpdateListeners.get(i).onMessageListUpdate(message);
                 }
             }
         }catch (Exception e){
             e.printStackTrace();
         }
-        return customChatMessage;
+        return message;
     }
 
 
@@ -413,11 +410,13 @@ public class XmppConnection {
                         for (RosterEntry e :rosterEntries) {
                             ChatUser user = chatUserMap.get(e.getJid().toString());
                             if(user == null){
+                                long conversationId = chatDbManager.getConversationId(currentUserName,e.getJid().toString().split("@")[0],e.getJid().toString());
                                 user = new ChatUser();
                                 user.setUserNick(e.getName());
                                 user.setJid(e.getJid().toString());
                                 user.setUserName(e.getJid().toString().split("@")[0]);
                                 user.setChatUserName(XmppConnection.getInstance().currentUserName);
+                                user.setConversationId(conversationId);
                             }
                             users.add(user);
                         }
@@ -477,6 +476,8 @@ public class XmppConnection {
                 .map(new Function<CustomChatMessage, Boolean>() {
                     @Override
                     public Boolean apply(CustomChatMessage s) throws Exception {
+                        //先存储
+                        chatDbManager.saveMessage(s);
                         chat.send(gson.toJson(s));
                         return true;
                     }

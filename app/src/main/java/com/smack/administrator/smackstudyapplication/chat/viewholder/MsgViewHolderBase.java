@@ -215,12 +215,12 @@ public abstract class MsgViewHolderBase extends RecyclerViewHolder<BaseMultiItem
      * 设置时间显示
      */
     private void setTimeTextView() {
-        if (message.getNeedShowTime()) {
-            timeTextView.setVisibility(View.VISIBLE);
-        } else {
-            timeTextView.setVisibility(View.GONE);
-            return;
-        }
+//        if (message.getNeedShowTime()) {
+//            timeTextView.setVisibility(View.VISIBLE);
+//        } else {
+//            timeTextView.setVisibility(View.GONE);
+//            return;
+//        }
 
         String text = TimeUtil.getTimeShowString(message.getTime(), false);
         timeTextView.setText(text);

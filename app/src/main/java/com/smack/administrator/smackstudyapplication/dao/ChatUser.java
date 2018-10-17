@@ -40,6 +40,8 @@ public class ChatUser implements Parcelable {
     private String avatar;
     //IM jid
     private String jid;
+    //会话id
+    private long conversationId;
 
     @Generated(hash = 401321336)
     public ChatUser(Long id, String chatUserName, String userName, String userNick,
@@ -54,11 +56,6 @@ public class ChatUser implements Parcelable {
 
     @Generated(hash = 450922767)
     public ChatUser() {
-    }
-
-    public ChatUser(String chatUserName, String userName) {
-        this.chatUserName = chatUserName;
-        this.userName = userName;
     }
 
     public String getUserName() {
@@ -109,6 +106,14 @@ public class ChatUser implements Parcelable {
         this.chatUserName = chatUserName;
     }
 
+    public long getConversationId() {
+        return conversationId;
+    }
+
+    public void setConversationId(long conversationId) {
+        this.conversationId = conversationId;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -122,6 +127,7 @@ public class ChatUser implements Parcelable {
         dest.writeString(this.userNick);
         dest.writeString(this.avatar);
         dest.writeString(this.jid);
+        dest.writeLong(this.conversationId);
     }
 
     protected ChatUser(Parcel in) {
@@ -131,6 +137,7 @@ public class ChatUser implements Parcelable {
         this.userNick = in.readString();
         this.avatar = in.readString();
         this.jid = in.readString();
+        this.conversationId = in.readLong();
     }
 
     public static final Parcelable.Creator<ChatUser> CREATOR = new Parcelable.Creator<ChatUser>() {

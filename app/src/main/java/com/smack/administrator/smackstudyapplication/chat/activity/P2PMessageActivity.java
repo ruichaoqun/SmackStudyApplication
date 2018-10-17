@@ -32,10 +32,9 @@ import com.smack.administrator.smackstudyapplication.dao.ChatUser;
  * </table>
  */
 public class P2PMessageActivity extends BaseMessageActivity {
-    public static void launchFrom(Context context, ChatUser chatUser,long conversationId){
+    public static void launchFrom(Context context, ChatUser chatUser){
         Intent intent = new Intent(context,P2PMessageActivity.class);
         intent.putExtra(Extras.EXTRA_CHAT_USER,chatUser);
-        intent.putExtra(Extras.EXTRA_CONVERSATION_ID,conversationId);
         context.startActivity(intent);
     }
 
@@ -43,8 +42,6 @@ public class P2PMessageActivity extends BaseMessageActivity {
     protected MessageFragment fragment() {
         MessageFragment fragment = new MessageFragment();
         Bundle bundle = new Bundle();
-        bundle.putString(Extras.EXTRA_JID,jid);
-        bundle.putLong(Extras.EXTRA_CONVERSATION_ID,conversationId);
         bundle.putParcelable(Extras.EXTRA_CHAT_USER,chatUser);
         fragment.setArguments(bundle);
         fragment.setContainerId(R.id.message_fragment_container);

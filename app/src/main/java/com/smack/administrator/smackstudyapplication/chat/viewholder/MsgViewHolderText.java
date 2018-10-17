@@ -43,6 +43,7 @@ public class MsgViewHolderText extends MsgViewHolderBase {
         });
         //TODO 表情处理
 //        MoonUtil.identifyFaceExpression(NimUIKit.getContext(), bodyTextView, getDisplayText(), ImageSpan.ALIGN_BOTTOM);
+        bodyTextView.setText(getDisplayText());
         bodyTextView.setMovementMethod(LinkMovementMethod.getInstance());
         bodyTextView.setOnLongClickListener(longClickListener);
     }

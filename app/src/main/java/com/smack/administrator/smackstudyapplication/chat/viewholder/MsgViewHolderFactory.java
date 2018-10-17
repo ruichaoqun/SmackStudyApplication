@@ -1,5 +1,7 @@
 package com.smack.administrator.smackstudyapplication.chat.viewholder;
 
+import android.text.TextUtils;
+
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
 
 import java.util.ArrayList;
@@ -34,13 +36,12 @@ public class MsgViewHolderFactory {
     }
 
     public static Class<? extends MsgViewHolderBase> getViewHolderByType(CustomChatMessage message) {
-        switch (message.getType()){
-            case "1:":
-                return MsgViewHolderText.class;
-            case "2":
-            case "3":
-                default:
+        if(message == null)
+            return null;
+        if(TextUtils.equals(message.getType(),"1")){
+            return MsgViewHolderText.class;
         }
+
 //        if (message.getType() == 1) {
 //            return MsgViewHolderText.class;
 //        } else if (message.getMsgType() == MsgTypeEnum.tip) {

@@ -26,6 +26,7 @@ import com.smack.administrator.smackstudyapplication.chat.input.InputPanel;
 import com.smack.administrator.smackstudyapplication.chat.session.SessionCustomization;
 import com.smack.administrator.smackstudyapplication.dao.ChatUser;
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
+import com.smack.administrator.smackstudyapplication.dao.MsgStatusEnum;
 
 import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.chat2.ChatManager;
@@ -54,14 +55,12 @@ public class MessageFragment extends TFragment implements ModuleProxy {
     protected static final String TAG = "MessageActivity";
 
     // 聊天对象
-    protected String jid; // 聊天对象的JID
     protected ChatUser user;
 
     // modules
     protected InputPanel inputPanel;
     protected MessageListPanelEx messageListPanel;
     private Chat chat;
-    private long conversationId;
 
 
     @Override
@@ -123,17 +122,15 @@ public class MessageFragment extends TFragment implements ModuleProxy {
     }
 
     private void parseIntent() {
-        jid = getArguments().getString(Extras.EXTRA_JID);
-        conversationId = getArguments().getLong(Extras.EXTRA_CONVERSATION_ID);
         user = getArguments().getParcelable(Extras.EXTRA_CHAT_USER);
         CustomChatMessage anchor = (CustomChatMessage) getArguments().getSerializable(Extras.EXTRA_ANCHOR);
 
-        Container container = new Container(getActivity(), jid,this);
+        Container container = new Container(getActivity(), user.getJid(),this);
 
 
-        if(!TextUtils.isEmpty(jid)){
+        if(!TextUtils.isEmpty(user.getJid())){
             try {
-                chat = XmppConnection.getInstance().getChatManager().chatWith(JidCreate.entityBareFrom(jid));
+                chat = XmppConnection.getInstance().getChatManager().chatWith(JidCreate.entityBareFrom(user.getJid()));
             } catch (XmppStringprepException e) {
                 onError(ResponseCode.ERROR_GET_CHAT);
                 e.printStackTrace();
@@ -141,13 +138,13 @@ public class MessageFragment extends TFragment implements ModuleProxy {
         }
 
         if (messageListPanel == null) {
-            messageListPanel = new MessageListPanelEx(container, rootView,conversationId);
+            messageListPanel = new MessageListPanelEx(container, rootView,user.getConversationId());
         } else {
-            messageListPanel.reload(container, anchor);
+            messageListPanel.reload(container);
         }
 
         if (inputPanel == null) {
-            inputPanel = new InputPanel(container, rootView, getActionList(),user,conversationId);
+            inputPanel = new InputPanel(container, rootView, getActionList(),user,user.getConversationId());
         } else {
             inputPanel.reload(container);
         }
@@ -183,7 +180,8 @@ public class MessageFragment extends TFragment implements ModuleProxy {
         public void newOutgoingMessage(EntityBareJid to, CustomChatMessage message, Chat chat) {
             if(message != null && TextUtils.equals(to.toString(),user.getJid())){
                 //更新消息状态
-                messageListPanel.onMsgSend(message);
+                message.setMsgStatusEnum(MsgStatusEnum.success);
+                messageListPanel.updateMsgStatu(message);
             }
         }
     };

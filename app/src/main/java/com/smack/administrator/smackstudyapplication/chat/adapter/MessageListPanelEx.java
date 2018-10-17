@@ -114,13 +114,13 @@ public class MessageListPanelEx {
         return false;
     }
 
-    public void reload(Container container, CustomChatMessage anchor) {
+    public void reload(Container container) {
         this.container = container;
         if (adapter != null) {
             adapter.clearData();
         }
 
-        initFetchLoadListener(anchor);
+        initFetchLoadListener();
     }
 
     private void init(CustomChatMessage anchor) {
@@ -156,7 +156,7 @@ public class MessageListPanelEx {
         adapter.setLoadMoreView(new MsgListFetchLoadMoreView());
         //注册各种监听器
 //        adapter.setEventListener(new MsgItemEventListener());
-        initFetchLoadListener(anchor);
+        initFetchLoadListener();
         messageListView.setAdapter(adapter);
         messageListView.addOnItemTouchListener(listener);
     }
@@ -205,8 +205,8 @@ public class MessageListPanelEx {
         }
     };
 
-    private void initFetchLoadListener(CustomChatMessage anchor) {
-        MessageLoader loader = new MessageLoader(anchor);
+    private void initFetchLoadListener() {
+        MessageLoader loader = new MessageLoader();
         // 只下来加载old数据
         adapter.setOnFetchMoreListener(loader);
     }
@@ -240,7 +240,7 @@ public class MessageListPanelEx {
         List<CustomChatMessage> addedListItems = new ArrayList<>(1);
         items.add(message);
         addedListItems.add(message);
-        sortMessages(items);
+        adapter.updateShowTimeItem(addedListItems, true);
         adapter.notifyDataSetChanged();
 
         if(needScrollToBottom){
@@ -259,10 +259,15 @@ public class MessageListPanelEx {
         //todo
         List<CustomChatMessage> addedListItems = new ArrayList<>(1);
         addedListItems.add(message);
-        adapter.updateShowTimeItem(addedListItems, false, true);
+        adapter.updateShowTimeItem(addedListItems, true);
         adapter.appendData(message);
 
         doScrollToBottom();
+    }
+
+    //消息状态更新
+    public void updateMsgStatu(CustomChatMessage message) {
+
     }
 
     /**
@@ -457,68 +462,26 @@ public class MessageListPanelEx {
         }
     }
 
+
+
     /**
      * ***************************************** 数据加载 *********************************************
      */
 
-    private class MessageLoader implements BaseFetchLoadAdapter.RequestLoadMoreListener, BaseFetchLoadAdapter.RequestFetchMoreListener {
-
+    private class MessageLoader implements BaseFetchLoadAdapter.RequestFetchMoreListener {
         //默认每次加载20条数据
         private int loadMsgCount = 20;
 
-        private QueryDirectionEnum direction = null;
-
-        private CustomChatMessage anchor;
-
         private boolean firstLoad = true;
 
-        public MessageLoader(CustomChatMessage anchor) {
-            this.anchor = anchor;
-            if (anchor == null) {
-                loadFromLocal(QueryDirectionEnum.QUERY_OLD);
+        public MessageLoader() {
+            if(firstLoad){
+                loadFromLocal();
                 mIsInitFetchingLocal = true;
-            } else {
-                loadAnchorContext(); // 加载指定anchor的上下文
             }
         }
 
-        private RequestCallback<List<CustomChatMessage>> callback = new RequestCallbackWrapper<List<CustomChatMessage>>() {
-            @Override
-            public void onResult(int code, List<CustomChatMessage> messages, Throwable exception) {
-                mIsInitFetchingLocal = false;
-                if (code != ResponseCode.RES_SUCCESS || exception != null) {
-                    if (direction == QueryDirectionEnum.QUERY_OLD) {
-                        adapter.fetchMoreFailed();
-                    } else if (direction == QueryDirectionEnum.QUERY_NEW) {
-                        adapter.loadMoreFail();
-                    }
-
-                    return;
-                }
-
-                if (messages != null) {
-                    onMessageLoaded(messages);
-                }
-            }
-        };
-
-        private void loadAnchorContext() {
-            // query new, auto load old
-            direction = QueryDirectionEnum.QUERY_NEW;
-//            NIMClient.getService(MsgService.class).queryMessageListEx(anchor(), direction, loadMsgCount, true)
-//                    .setCallback(new RequestCallbackWrapper<List<CustomChatMessage>>() {
-//                        @Override
-//                        public void onResult(int code, List<CustomChatMessage> messages, Throwable exception) {
-//                            if (code != ResponseCode.RES_SUCCESS || exception != null) {
-//                                return;
-//                            }
-//
-//                            onAnchorContextMessageLoaded(messages);
-//                        }
-//                    });
-        }
-
-        private void loadFromLocal(final QueryDirectionEnum direction) {
+        private void loadFromLocal(){
             if (mIsInitFetchingLocal) {
                 return;
             }
@@ -533,11 +496,7 @@ public class MessageListPanelEx {
                         @Override
                         public void accept(Throwable throwable) throws Exception {
                             mIsInitFetchingLocal = false;
-                            if (direction == QueryDirectionEnum.QUERY_OLD) {
-                                adapter.fetchMoreFailed();
-                            } else if (direction == QueryDirectionEnum.QUERY_NEW) {
-                                adapter.loadMoreFail();
-                            }
+                            adapter.fetchMoreFailed();
                         }
                     });
         }
@@ -586,43 +545,11 @@ public class MessageListPanelEx {
             firstLoad = false;
         }
 
-        private void onAnchorContextMessageLoaded(final List<CustomChatMessage> messages) {
-            if (messages == null) {
-                return;
-            }
-
-//            if (remote) {
-//                Collections.reverse(messages);
-//            }
-
-            int loadCount = messages.size();
-            if (firstLoad && anchor != null) {
-                messages.add(0, anchor);
-            }
-
-            // 在更新前，先确定一些标记
-//            updateReceipt(messages); // 更新已读回执标签
-
-            // new data
-            if (loadCount < loadMsgCount) {
-                adapter.loadMoreEnd(messages, true);
-            } else {
-                adapter.appendData(messages);
-            }
-
-            firstLoad = false;
-        }
 
         @Override
         public void onFetchMoreRequested() {
             // 顶部加载历史数据
-            loadFromLocal(QueryDirectionEnum.QUERY_OLD);
-        }
-
-        @Override
-        public void onLoadMoreRequested() {
-            // 底部加载新数据
-            loadFromLocal(QueryDirectionEnum.QUERY_NEW);
+//            loadFromLocal();
         }
     }
 

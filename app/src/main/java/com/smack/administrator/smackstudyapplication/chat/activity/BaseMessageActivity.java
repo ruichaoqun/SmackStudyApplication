@@ -47,8 +47,6 @@ import java.util.List;
  */
 public abstract class BaseMessageActivity extends UI {
 
-    protected String jid;
-    protected long conversationId;
     protected ChatUser chatUser;
 
     private MessageFragment messageFragment;
@@ -114,13 +112,6 @@ public abstract class BaseMessageActivity extends UI {
 
     private void parseIntent() {
         chatUser = getIntent().getParcelableExtra(Extras.EXTRA_CHAT_USER);
-        conversationId = getIntent().getLongExtra(Extras.EXTRA_CONVERSATION_ID,0);
-        if(chatUser != null){
-            jid = chatUser.getJid();
-        }
-        if(conversationId == -1){
-            conversationId = XmppConnection.getInstance().getConversationId(chatUser.getUserName(),jid);
-        }
     }
 
     // 添加action bar的右侧按钮及响应事件
@@ -144,7 +135,7 @@ public abstract class BaseMessageActivity extends UI {
             imageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    button.onClick(BaseMessageActivity.this, v, jid);
+                    button.onClick(BaseMessageActivity.this, v, chatUser.getJid());
                 }
             });
             view.addView(imageView, params);

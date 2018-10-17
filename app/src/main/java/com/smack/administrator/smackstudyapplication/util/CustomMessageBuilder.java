@@ -44,7 +44,7 @@ public class CustomMessageBuilder {
         message.setType("1");
         message.setMsgStatusEnum(MsgStatusEnum.sending);
         message.setConversationId(conversationId);
-        message.setTime(SystemClock.currentThreadTimeMillis());
+        message.setTime(System.currentTimeMillis());
         return message;
     }
 }

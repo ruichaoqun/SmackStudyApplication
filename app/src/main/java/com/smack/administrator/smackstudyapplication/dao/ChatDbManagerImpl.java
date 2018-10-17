@@ -175,7 +175,6 @@ public class ChatDbManagerImpl implements ChatDbManager{
     @Override
     public void saveMessage(List<CustomChatMessage> messages) {
         daoSession.getCustomChatMessageDao().insertInTx(messages);
-        daoSession.getCustomChatMessageDao().deleteAll();
     }
 
     /**
@@ -185,7 +184,14 @@ public class ChatDbManagerImpl implements ChatDbManager{
      */
     @Override
     public Long saveMessage(CustomChatMessage message) {
-        Long l = daoSession.getCustomChatMessageDao().insert(message);
+        ConversationInfo info = daoSession.getConversationInfoDao().queryBuilder().where(ConversationInfoDao.Properties.Id.eq(message.getConversationId())).build().unique();
+        if(info != null){
+            info.setLastMessage(message.getText());
+            info.setDate(message.getTime());
+            info.setUnReadMessageNumber(message.);
+        }
+        daoSession.getCustomChatMessageDao().insertOrReplace(message);
+
         return l;
     }
 
