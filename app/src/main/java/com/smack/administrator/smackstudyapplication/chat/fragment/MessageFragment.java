@@ -1,8 +1,10 @@
 package com.smack.administrator.smackstudyapplication.chat.fragment;
 
+import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +22,7 @@ import com.smack.administrator.smackstudyapplication.chat.Container;
 import com.smack.administrator.smackstudyapplication.chat.ModuleProxy;
 import com.smack.administrator.smackstudyapplication.chat.actions.BaseAction;
 import com.smack.administrator.smackstudyapplication.chat.actions.ImageAction;
+import com.smack.administrator.smackstudyapplication.chat.activity.BaseMessageActivity;
 import com.smack.administrator.smackstudyapplication.chat.adapter.MessageListPanelEx;
 import com.smack.administrator.smackstudyapplication.chat.constant.Extras;
 import com.smack.administrator.smackstudyapplication.chat.input.InputPanel;
@@ -53,6 +56,7 @@ public class MessageFragment extends TFragment implements ModuleProxy {
     private View rootView;
 
     protected static final String TAG = "MessageActivity";
+    private BaseMessageActivity activity;
 
     // 聊天对象
     protected ChatUser user;
@@ -61,6 +65,7 @@ public class MessageFragment extends TFragment implements ModuleProxy {
     protected InputPanel inputPanel;
     protected MessageListPanelEx messageListPanel;
     private Chat chat;
+    private Handler uiHandler;
 
 
     @Override
@@ -75,9 +80,28 @@ public class MessageFragment extends TFragment implements ModuleProxy {
         return rootView;
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if(context instanceof BaseMessageActivity){
+            activity = (BaseMessageActivity) context;
+            XmppConnection.getInstance().attachActivity(activity);
+            uiHandler = new Handler();
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        XmppConnection.getInstance().dettachActivity();
+        uiHandler = null;
+    }
+
     /**
      * ***************************** life cycle *******************************
      */
+
+
 
     @Override
     public void onPause() {
@@ -180,7 +204,6 @@ public class MessageFragment extends TFragment implements ModuleProxy {
         public void newOutgoingMessage(EntityBareJid to, CustomChatMessage message, Chat chat) {
             if(message != null && TextUtils.equals(to.toString(),user.getJid())){
                 //更新消息状态
-                message.setMsgStatusEnum(MsgStatusEnum.success);
                 messageListPanel.updateMsgStatu(message);
             }
         }
@@ -189,10 +212,15 @@ public class MessageFragment extends TFragment implements ModuleProxy {
     //新消息接收回调
     XmppConnection.XmppIncomingChatMessageListener incomingChatMessageListener = new XmppConnection.XmppIncomingChatMessageListener() {
         @Override
-        public void newIncomingMessage(EntityBareJid from, CustomChatMessage message, Chat chat) {
-            if(message != null && TextUtils.equals(from.toString(),user.getJid())){
-                messageListPanel.onIncomingMessage(message);
-            }
+        public void newIncomingMessage(final EntityBareJid from, final CustomChatMessage message, Chat chat) {
+            uiHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if(message != null && TextUtils.equals(from.toString(),user.getJid())){
+                        messageListPanel.onIncomingMessage(message);
+                    }
+                }
+            });
         }
     };
 
@@ -201,7 +229,7 @@ public class MessageFragment extends TFragment implements ModuleProxy {
      * ********************** implements ModuleProxy *********************
      */
     @Override
-    public boolean sendMessage(CustomChatMessage message) {
+    public boolean sendMessage(final CustomChatMessage message) {
         final CustomChatMessage msg = message;
         XmppConnection.getInstance().sendMessage(chat,msg)
                 .subscribe(new Consumer<Boolean>() {

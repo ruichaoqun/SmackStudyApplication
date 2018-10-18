@@ -87,12 +87,12 @@ public abstract class MsgViewHolderBase extends RecyclerViewHolder<BaseMultiItem
 
     // 当是接收到的消息时，内容区域背景的drawable id
     protected int leftBackground() {
-        return R.drawable.ease_chatfrom_bg;
+        return R.drawable.nim_message_item_left_selector;
     }
 
     // 当是发送出去的消息时，内容区域背景的drawable id
     protected int rightBackground() {
-        return R.drawable.ease_chatto_bg;
+        return R.drawable.nim_message_item_right_selector;
     }
 
     // 返回该消息是不是居中显示
@@ -156,7 +156,9 @@ public abstract class MsgViewHolderBase extends RecyclerViewHolder<BaseMultiItem
 
     // 判断消息方向，是否是接收到的消息
     protected boolean isReceivedMessage() {
-        return message.getSendUserName() == XmppConnection.getInstance().getCurrentUserName();
+        String s1 = XmppConnection.getInstance().getCurrentUserName();
+        boolean b = TextUtils.equals(message.getSendUserName(),s1);
+        return !b;
     }
 
     /// -- 以下是基类实现代码
@@ -215,12 +217,12 @@ public abstract class MsgViewHolderBase extends RecyclerViewHolder<BaseMultiItem
      * 设置时间显示
      */
     private void setTimeTextView() {
-//        if (message.getNeedShowTime()) {
-//            timeTextView.setVisibility(View.VISIBLE);
-//        } else {
-//            timeTextView.setVisibility(View.GONE);
-//            return;
-//        }
+        if (getMsgAdapter().needShowTime(message)) {
+            timeTextView.setVisibility(View.VISIBLE);
+        } else {
+            timeTextView.setVisibility(View.GONE);
+            return;
+        }
 
         String text = TimeUtil.getTimeShowString(message.getTime(), false);
         timeTextView.setText(text);

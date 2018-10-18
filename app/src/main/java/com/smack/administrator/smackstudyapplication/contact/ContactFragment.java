@@ -74,7 +74,7 @@ public class ContactFragment extends Fragment implements ContactAdapter.OnItemCl
     public void onItemClick(ContactAdapter.ViewHolder holder, int position) {
         ChatUser user = adapter.getItem(position);
         if(user != null){
-            P2PMessageActivity.launchFrom(getContext(),user,-1);
+            P2PMessageActivity.launchFrom(getContext(),user);
         }
     }
 }

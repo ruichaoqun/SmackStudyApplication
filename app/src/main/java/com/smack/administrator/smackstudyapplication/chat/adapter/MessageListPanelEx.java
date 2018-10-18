@@ -23,6 +23,7 @@ import com.smack.administrator.smackstudyapplication.XmppConnection;
 import com.smack.administrator.smackstudyapplication.chat.Container;
 import com.smack.administrator.smackstudyapplication.chat.QueryDirectionEnum;
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
+import com.smack.administrator.smackstudyapplication.dao.MsgStatusEnum;
 import com.smack.administrator.smackstudyapplication.util.BitmapDecoder;
 import com.smack.administrator.smackstudyapplication.util.sys.ScreenUtil;
 import com.smack.administrator.smackstudyapplication.widget.recyclerview.adapter.BaseFetchLoadAdapter;
@@ -267,6 +268,12 @@ public class MessageListPanelEx {
 
     //消息状态更新
     public void updateMsgStatu(CustomChatMessage message) {
+        for (int i = 0; i < items.size(); i++) {
+            if( TextUtils.equals(message.getUuid(),items.get(i).getUuid())){
+                items.get(i).setMsgStatusEnum(message.getMsgStatusEnum());
+                refreshViewHolderByIndex(i);
+            }
+        }
 
     }
 
@@ -510,38 +517,35 @@ public class MessageListPanelEx {
 
             boolean noMoreMessage = messages.size() < loadMsgCount;
 
-//            // 在第一次加载的过程中又收到了新消息，做一下去重
-//            if (firstLoad && items.size() > 0) {
-//                for (CustomChatMessage message : messages) {
-//                    int removeIndex = 0;
-//                    for (CustomChatMessage item : items) {
-//                        if (TextUtils.equals(item.getUuid(),message.getUuid())) {
-//                            adapter.remove(removeIndex);
-//                            break;
-//                        }
-//                        removeIndex++;
-//                    }
-//                }
-//            }
+            // 在第一次加载的过程中又收到了新消息，做一下去重
+            if (firstLoad && items.size() > 0) {
+                for (CustomChatMessage message : messages) {
+                    int removeIndex = 0;
+                    for (CustomChatMessage item : items) {
+                        if (TextUtils.equals(item.getUuid(),message.getUuid())) {
+                            adapter.remove(removeIndex);
+                            break;
+                        }
+                        removeIndex++;
+                    }
+                }
+            }
 
             // 在更新前，先确定一些标记
             List<CustomChatMessage> total = new ArrayList<>();
             total.addAll(0, messages);
 //            updateReceipt(total); // 更新已读回执标签
-
+            adapter.updateShowTimeItem(total, true); // 更新要显示时间的消息
 
             if (noMoreMessage) {
                 adapter.fetchMoreEnd(messages, true);
             } else {
                 adapter.fetchMoreComplete(messages);
             }
-
             // 如果是第一次加载，updateShowTimeItem返回的就是lastShowTimeItem
             if (firstLoad) {
                 doScrollToBottom();
             }
-
-
             firstLoad = false;
         }
 

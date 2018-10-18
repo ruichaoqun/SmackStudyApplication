@@ -6,11 +6,13 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.smack.administrator.smackstudyapplication.chat.activity.BaseMessageActivity;
 import com.smack.administrator.smackstudyapplication.dao.ChatDbManager;
 import com.smack.administrator.smackstudyapplication.dao.ChatDbManagerImpl;
 import com.smack.administrator.smackstudyapplication.dao.ChatUser;
 import com.smack.administrator.smackstudyapplication.dao.ConversationInfo;
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
+import com.smack.administrator.smackstudyapplication.dao.MsgStatusEnum;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
@@ -32,6 +34,8 @@ import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smackx.vcardtemp.VCardManager;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.EntityFullJid;
+import org.jxmpp.jid.EntityJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Localpart;
 import org.jxmpp.stringprep.XmppStringprepException;
@@ -93,6 +97,7 @@ public class XmppConnection {
     private List<OnMessageListUpdateListener> messageListUpdateListeners = new ArrayList<>();
     private XmppIncomingChatMessageListener incomingMessageListener;
     private XmppOutgoingChatMessageListener outgoingMessageListener;
+    private BaseMessageActivity activity;
 
 
     private ConnectionListener connectionListener = new ConnectionListener() {
@@ -120,9 +125,20 @@ public class XmppConnection {
     private IncomingChatMessageListener incomingChatMessageListener = new IncomingChatMessageListener() {
         @Override
         public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
-            CustomChatMessage customChatMessage = saveMessage(from,message);
-            if(customChatMessage != null && incomingMessageListener != null){
-                incomingMessageListener.newIncomingMessage(from,customChatMessage,chat);
+            CustomChatMessage chatMessage = gson.fromJson(message.getBody(),CustomChatMessage.class);
+            if(chatMessage != null){
+                Log.w("AAA","incomingTime-->"+chatMessage.getTime());
+                //删除收到的消息的主键
+                chatMessage.setConversationId(null);
+                //收到消息后更改发送状态
+                chatMessage.setMsgStatusEnum(MsgStatusEnum.success);
+                //更改消息的conversationId为自己的
+                long id = chatDbManager.getConversationId(currentUserName,from.toString().split("@")[0],from.toString());
+                chatMessage.setConversationId(id);
+                chatDbManager.saveMessage(chatMessage, activity == null);
+                if(incomingMessageListener != null){
+                    incomingMessageListener.newIncomingMessage(from,chatMessage,chat);
+                }
             }
         }
     };
@@ -132,29 +148,17 @@ public class XmppConnection {
     private OutgoingChatMessageListener outgoingChatMessageListener = new OutgoingChatMessageListener() {
         @Override
         public void newOutgoingMessage(EntityBareJid to, Message message, Chat chat) {
-            CustomChatMessage customChatMessage = saveMessage(to,message);
-            if(customChatMessage != null && outgoingMessageListener != null){
-                outgoingMessageListener.newOutgoingMessage(to,customChatMessage,chat);
+            CustomChatMessage chatMessage = gson.fromJson(message.getBody(),CustomChatMessage.class);
+            if(chatMessage != null){
+                Log.w("AAA","newOutgoingMessageTime-->"+chatMessage.getTime());
+                chatMessage.setMsgStatusEnum(MsgStatusEnum.success);
+                chatDbManager.updateMessageStstus(chatMessage);
+                if( outgoingMessageListener != null){
+                    outgoingMessageListener.newOutgoingMessage(to,chatMessage,chat);
+                }
             }
         }
     };
-
-    private CustomChatMessage saveMessage(CustomChatMessage message) {
-        // 收到消息后先存储，后通知
-        try {
-            if(message != null){
-                long conversationId = chatDbManager.insertOrUpdateConversation(message,TestData.TEST_USERNAME,jid);
-                message.setConversationId(conversationId);
-                chatDbManager.saveMessage(message);
-                for (int i = 0; i < messageListUpdateListeners.size(); i++) {
-                    messageListUpdateListeners.get(i).onMessageListUpdate(message);
-                }
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        return message;
-    }
 
 
     //是否已连接服务器
@@ -477,7 +481,7 @@ public class XmppConnection {
                     @Override
                     public Boolean apply(CustomChatMessage s) throws Exception {
                         //先存储
-                        chatDbManager.saveMessage(s);
+                        chatDbManager.saveMessage(s,false);
                         chat.send(gson.toJson(s));
                         return true;
                     }
@@ -553,7 +557,7 @@ public class XmppConnection {
                 }
             }
         }
-        return new ChatUser(currentUserName,account);
+        return new ChatUser();
     }
 
     public VCard getVCard(String jid) throws SmackException.NoResponseException, XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, XmppStringprepException {
@@ -622,6 +626,14 @@ public class XmppConnection {
 
     public interface OnUnreadMessageUpdateListener{
         void onUnreadMessageUpdate(int unReadNumber);
+    }
+
+    public void attachActivity(BaseMessageActivity messageActivity){
+        this.activity = messageActivity;
+    }
+
+    public void dettachActivity(){
+        this.activity = null;
     }
 
 

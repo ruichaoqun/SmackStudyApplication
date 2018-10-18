@@ -1,9 +1,9 @@
 package com.smack.administrator.smackstudyapplication.chat.viewholder;
 
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
 
+import com.smack.administrator.smackstudyapplication.chat.data.MessageType;
 import com.smack.administrator.smackstudyapplication.R;
 import com.smack.administrator.smackstudyapplication.util.BitmapDecoder;
 import com.smack.administrator.smackstudyapplication.util.sys.ScreenUtil;
@@ -91,7 +91,7 @@ public abstract class MsgViewHolderThumbBase extends MsgViewHolderBase {
             bounds = BitmapDecoder.decodeBound(new File(thumbPath));
         }
         if (bounds == null) {
-            if (message.getType() == "2") {
+            if (message.getType() == MessageType.TYPE_IMAGE) {
 //                bounds = new int[]{attachment.getWidth(), attachment.getHeight()};
             }
         }

@@ -152,6 +152,7 @@ public class InputPanel implements IEmoticonSelectedListener,  AitTextChangeList
         initTextEdit();
         initAudioRecordButton();
         restoreText(false);
+        emoticonPickerView.setWithSticker(false);
 
         for (int i = 0; i < actions.size(); ++i) {
             actions.get(i).setIndex(i);
@@ -161,6 +162,7 @@ public class InputPanel implements IEmoticonSelectedListener,  AitTextChangeList
 
     public void reload(Container container) {
         this.container = container;
+
     }
 
     private void initViews() {
@@ -274,7 +276,6 @@ public class InputPanel implements IEmoticonSelectedListener,  AitTextChangeList
     /**
      * ************************* 键盘布局切换 *******************************
      */
-
     private View.OnClickListener clickListener = new View.OnClickListener() {
 
         @Override
@@ -284,11 +285,11 @@ public class InputPanel implements IEmoticonSelectedListener,  AitTextChangeList
             } else if (v == sendMessageButtonInInputBar) {
                 onTextMessageSendButtonPressed();
             } else if (v == switchToAudioButtonInInputBar) {
-                switchToAudioLayout();
+                switchToAudioLayout();//切换到视频布局
             } else if (v == moreFuntionButtonInInputBar) {
-                toggleActionPanelLayout();
+                toggleActionPanelLayout();//显示选项卡布局
             } else if (v == emojiButtonInInputBar) {
-                toggleEmojiLayout();
+                toggleEmojiLayout();//显示emoji布局
             }
         }
     };

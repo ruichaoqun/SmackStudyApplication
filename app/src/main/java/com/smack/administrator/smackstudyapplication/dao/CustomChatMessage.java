@@ -32,59 +32,33 @@ public class CustomChatMessage implements Parcelable {
     @Id
     private Long id;                    // 主键
     private String uuid;                // 消息uuid，使用当前账号+时间戳拼接
-    private String type;                // 消息类型 1.文字类型 2.语音类型 3.图片类型
+    private int chatType;               // 聊天类型 1.单聊  2.群聊
+    private int type;                   // 消息类型 1.文字类型 2.语音类型 3.图片类型 4.位置 5.视频 6.文件
     private String text;                // 文本消息
     private String imagePath;           // 图片地址
-    private String filePath;            // 语音地址
-    private Long time;                  // 发送日期
-    private Boolean isNeedShowTime;     // 是否需要显示时间
-    private String sendUserName;        // 发送发username
-    private String recieveUserName;     // 接收方username
+    private String originalImagePath;   // 原始大图图片地址
+    private String imageWidth;          // 图片宽
+    private String imageHeight;         // 图片高
+    private String voicePath;           // 语音地址
+    private String videoPath;           // 视频地址
+    private String filePath;            // 文件地址
+    private float longitude;            // 经度
+    private float latitude;             // 纬度
+    private long time;                  // 发送日期
+    private String sendUserName;        // 发送方账号
+    private String recieveUserName;     // 接收方账号
     private String sendJid;             // 发送方jid
     private String recieveJid;          // 接收方jid
-    private String sendNickName;        // 发送方昵称
-    private String recieveNickName;     // 接收方昵称
-    private String sendAvatar;          // 发送方头像
-    private String recieveAvatar;       // 接收方头像
-    private Boolean isRead;             // 是否已读（对于我接收的）
-    private Boolean isSendSuccess;      // 是否发送成功（对于我发出去的）
-    private Long conversationId;        // 会话id
-    
+    private Long conversationId;        // 会话id（存储这两人对话的消息列表的id）
     @Convert(converter = MsgStatusEnum.StatusConverter.class,columnType = Integer.class )
-    private MsgStatusEnum msgStatusEnum;
+    private MsgStatusEnum msgStatusEnum;// 消息状态
 
-
-
-    @Generated(hash = 181135369)
-    public CustomChatMessage(Long id, String uuid, String type, String text, String imagePath,
-            String filePath, Long time, Boolean isNeedShowTime, String sendUserName,
-            String recieveUserName, String sendJid, String recieveJid, String sendNickName,
-            String recieveNickName, String sendAvatar, String recieveAvatar, Boolean isRead,
-            Boolean isSendSuccess, Long conversationId, MsgStatusEnum msgStatusEnum) {
-        this.id = id;
-        this.uuid = uuid;
-        this.type = type;
-        this.text = text;
-        this.imagePath = imagePath;
-        this.filePath = filePath;
-        this.time = time;
-        this.isNeedShowTime = isNeedShowTime;
-        this.sendUserName = sendUserName;
-        this.recieveUserName = recieveUserName;
-        this.sendJid = sendJid;
-        this.recieveJid = recieveJid;
-        this.sendNickName = sendNickName;
-        this.recieveNickName = recieveNickName;
-        this.sendAvatar = sendAvatar;
-        this.recieveAvatar = recieveAvatar;
-        this.isRead = isRead;
-        this.isSendSuccess = isSendSuccess;
-        this.conversationId = conversationId;
-        this.msgStatusEnum = msgStatusEnum;
+    public Long getId() {
+        return id;
     }
 
-    @Generated(hash = 1572996633)
-    public CustomChatMessage() {
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getUuid() {
@@ -95,11 +69,19 @@ public class CustomChatMessage implements Parcelable {
         this.uuid = uuid;
     }
 
-    public String getType() {
+    public int getChatType() {
+        return chatType;
+    }
+
+    public void setChatType(int chatType) {
+        this.chatType = chatType;
+    }
+
+    public int getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(int type) {
         this.type = type;
     }
 
@@ -119,6 +101,46 @@ public class CustomChatMessage implements Parcelable {
         this.imagePath = imagePath;
     }
 
+    public String getOriginalImagePath() {
+        return originalImagePath;
+    }
+
+    public void setOriginalImagePath(String originalImagePath) {
+        this.originalImagePath = originalImagePath;
+    }
+
+    public String getImageWidth() {
+        return imageWidth;
+    }
+
+    public void setImageWidth(String imageWidth) {
+        this.imageWidth = imageWidth;
+    }
+
+    public String getImageHeight() {
+        return imageHeight;
+    }
+
+    public void setImageHeight(String imageHeight) {
+        this.imageHeight = imageHeight;
+    }
+
+    public String getVoicePath() {
+        return voicePath;
+    }
+
+    public void setVoicePath(String voicePath) {
+        this.voicePath = voicePath;
+    }
+
+    public String getVideoPath() {
+        return videoPath;
+    }
+
+    public void setVideoPath(String videoPath) {
+        this.videoPath = videoPath;
+    }
+
     public String getFilePath() {
         return filePath;
     }
@@ -127,24 +149,32 @@ public class CustomChatMessage implements Parcelable {
         this.filePath = filePath;
     }
 
-    public Long getId() {
-        return this.id;
+    public float getLongitude() {
+        return longitude;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setLongitude(float longitude) {
+        this.longitude = longitude;
     }
 
-    public Long getTime() {
+    public float getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(float latitude) {
+        this.latitude = latitude;
+    }
+
+    public long getTime() {
         return time;
     }
 
-    public void setTime(Long time) {
+    public void setTime(long time) {
         this.time = time;
     }
 
     public String getSendUserName() {
-        return this.sendUserName;
+        return sendUserName;
     }
 
     public void setSendUserName(String sendUserName) {
@@ -152,7 +182,7 @@ public class CustomChatMessage implements Parcelable {
     }
 
     public String getRecieveUserName() {
-        return this.recieveUserName;
+        return recieveUserName;
     }
 
     public void setRecieveUserName(String recieveUserName) {
@@ -160,7 +190,7 @@ public class CustomChatMessage implements Parcelable {
     }
 
     public String getSendJid() {
-        return this.sendJid;
+        return sendJid;
     }
 
     public void setSendJid(String sendJid) {
@@ -168,107 +198,27 @@ public class CustomChatMessage implements Parcelable {
     }
 
     public String getRecieveJid() {
-        return this.recieveJid;
+        return recieveJid;
     }
 
     public void setRecieveJid(String recieveJid) {
         this.recieveJid = recieveJid;
     }
 
-    public Boolean getIsRead() {
-        return this.isRead;
-    }
-
-    public void setIsRead(Boolean isRead) {
-        this.isRead = isRead;
-    }
-
-    public Boolean getIsSendSuccess() {
-        return this.isSendSuccess;
-    }
-
-    public void setIsSendSuccess(Boolean isSendSuccess) {
-        this.isSendSuccess = isSendSuccess;
-    }
-
-    public Boolean getRead() {
-        return isRead;
-    }
-
-    public void setRead(Boolean read) {
-        isRead = read;
-    }
-
-    public Boolean getSendSuccess() {
-        return isSendSuccess;
-    }
-
-    public void setSendSuccess(Boolean sendSuccess) {
-        isSendSuccess = sendSuccess;
-    }
-
     public Long getConversationId() {
-        return this.conversationId;
+        return conversationId;
     }
 
     public void setConversationId(Long conversationId) {
         this.conversationId = conversationId;
     }
 
-    public String getSendNickName() {
-        return sendNickName;
-    }
-
-    public void setSendNickName(String sendNickName) {
-        this.sendNickName = sendNickName;
-    }
-
-    public String getRecieveNickName() {
-        return recieveNickName;
-    }
-
-    public void setRecieveNickName(String recieveNickName) {
-        this.recieveNickName = recieveNickName;
-    }
-
-    public String getSendAvatar() {
-        return sendAvatar;
-    }
-
-    public void setSendAvatar(String sendAvatar) {
-        this.sendAvatar = sendAvatar;
-    }
-
-    public String getRecieveAvatar() {
-        return recieveAvatar;
-    }
-
-    public void setRecieveAvatar(String recieveAvatar) {
-        this.recieveAvatar = recieveAvatar;
-    }
-
     public MsgStatusEnum getMsgStatusEnum() {
-        return this.msgStatusEnum;
+        return msgStatusEnum;
     }
 
     public void setMsgStatusEnum(MsgStatusEnum msgStatusEnum) {
         this.msgStatusEnum = msgStatusEnum;
-    }
-
-    public Boolean getNeedShowTime() {
-        return isNeedShowTime;
-    }
-
-    public void setNeedShowTime(Boolean needShowTime) {
-        isNeedShowTime = needShowTime;
-    }
-
-    public Boolean getIsNeedShowTime() {
-        return this.isNeedShowTime;
-    }
-
-    public void setIsNeedShowTime(Boolean isNeedShowTime) {
-        this.isNeedShowTime = isNeedShowTime;
     }
 
     @Override
@@ -280,51 +230,85 @@ public class CustomChatMessage implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeValue(this.id);
         dest.writeString(this.uuid);
-        dest.writeString(this.type);
+        dest.writeInt(this.chatType);
+        dest.writeInt(this.type);
         dest.writeString(this.text);
         dest.writeString(this.imagePath);
+        dest.writeString(this.originalImagePath);
+        dest.writeString(this.imageWidth);
+        dest.writeString(this.imageHeight);
+        dest.writeString(this.voicePath);
+        dest.writeString(this.videoPath);
         dest.writeString(this.filePath);
-        dest.writeValue(this.time);
-        dest.writeValue(this.isNeedShowTime);
+        dest.writeFloat(this.longitude);
+        dest.writeFloat(this.latitude);
+        dest.writeLong(this.time);
         dest.writeString(this.sendUserName);
         dest.writeString(this.recieveUserName);
         dest.writeString(this.sendJid);
         dest.writeString(this.recieveJid);
-        dest.writeString(this.sendNickName);
-        dest.writeString(this.recieveNickName);
-        dest.writeString(this.sendAvatar);
-        dest.writeString(this.recieveAvatar);
-        dest.writeValue(this.isRead);
-        dest.writeValue(this.isSendSuccess);
         dest.writeValue(this.conversationId);
         dest.writeInt(this.msgStatusEnum == null ? -1 : this.msgStatusEnum.ordinal());
+    }
+
+    public CustomChatMessage() {
     }
 
     protected CustomChatMessage(Parcel in) {
         this.id = (Long) in.readValue(Long.class.getClassLoader());
         this.uuid = in.readString();
-        this.type = in.readString();
+        this.chatType = in.readInt();
+        this.type = in.readInt();
         this.text = in.readString();
         this.imagePath = in.readString();
+        this.originalImagePath = in.readString();
+        this.imageWidth = in.readString();
+        this.imageHeight = in.readString();
+        this.voicePath = in.readString();
+        this.videoPath = in.readString();
         this.filePath = in.readString();
-        this.time = (Long) in.readValue(Long.class.getClassLoader());
-        this.isNeedShowTime = (Boolean) in.readValue(Boolean.class.getClassLoader());
+        this.longitude = in.readFloat();
+        this.latitude = in.readFloat();
+        this.time = in.readLong();
         this.sendUserName = in.readString();
         this.recieveUserName = in.readString();
         this.sendJid = in.readString();
         this.recieveJid = in.readString();
-        this.sendNickName = in.readString();
-        this.recieveNickName = in.readString();
-        this.sendAvatar = in.readString();
-        this.recieveAvatar = in.readString();
-        this.isRead = (Boolean) in.readValue(Boolean.class.getClassLoader());
-        this.isSendSuccess = (Boolean) in.readValue(Boolean.class.getClassLoader());
         this.conversationId = (Long) in.readValue(Long.class.getClassLoader());
         int tmpMsgStatusEnum = in.readInt();
         this.msgStatusEnum = tmpMsgStatusEnum == -1 ? null : MsgStatusEnum.values()[tmpMsgStatusEnum];
     }
 
-    public static final Parcelable.Creator<CustomChatMessage> CREATOR = new Parcelable.Creator<CustomChatMessage>() {
+    @Generated(hash = 1291797040)
+    public CustomChatMessage(Long id, String uuid, int chatType, int type, String text,
+            String imagePath, String originalImagePath, String imageWidth, String imageHeight,
+            String voicePath, String videoPath, String filePath, float longitude, float latitude,
+            long time, String sendUserName, String recieveUserName, String sendJid, String recieveJid,
+            Long conversationId, MsgStatusEnum msgStatusEnum) {
+        this.id = id;
+        this.uuid = uuid;
+        this.chatType = chatType;
+        this.type = type;
+        this.text = text;
+        this.imagePath = imagePath;
+        this.originalImagePath = originalImagePath;
+        this.imageWidth = imageWidth;
+        this.imageHeight = imageHeight;
+        this.voicePath = voicePath;
+        this.videoPath = videoPath;
+        this.filePath = filePath;
+        this.longitude = longitude;
+        this.latitude = latitude;
+        this.time = time;
+        this.sendUserName = sendUserName;
+        this.recieveUserName = recieveUserName;
+        this.sendJid = sendJid;
+        this.recieveJid = recieveJid;
+        this.conversationId = conversationId;
+        this.msgStatusEnum = msgStatusEnum;
+    }
+
+    public static final Creator<CustomChatMessage> CREATOR = new Creator<CustomChatMessage>() {
         @Override
         public CustomChatMessage createFromParcel(Parcel source) {
             return new CustomChatMessage(source);

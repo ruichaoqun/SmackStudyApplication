@@ -1,6 +1,6 @@
-package com.smack.administrator.smackstudyapplication;
+package com.smack.administrator.smackstudyapplication.chat.data;
 
-import android.support.annotation.StringDef;
+import android.support.annotation.IntDef;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -18,20 +18,19 @@ import java.lang.annotation.RetentionPolicy;
  * </tr>
  * <tr>
  * <td>2018-09-27 17:22</td>
- * <td>${User}</td>
+ * <td>rui chaoqun</td>
  * <td>All</td>
  * <td>Created.</td>
  * </tr>
  * </table>
  */
-@StringDef({
-        MessageType.TYPE_IMAGE,
-        MessageType.TYPE_TEXT,
-        MessageType.TYPE_VOICE
+@IntDef({
+        ChatType.P2P,
+        ChatType.CHAT_ROOM
 })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface MessageType {
-    String TYPE_TEXT = "text";
-    String TYPE_VOICE = "voice";
-    String TYPE_IMAGE = "image";
+public @interface ChatType {
+     //1.单聊 2.群聊
+    int P2P = 1;
+    int CHAT_ROOM = 2;
 }

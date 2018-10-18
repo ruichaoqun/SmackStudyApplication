@@ -76,7 +76,7 @@ public interface ChatDbManager {
      * @param message
      * @return
      */
-    public Long saveMessage(CustomChatMessage message);
+    public void saveMessage(CustomChatMessage message, boolean isAddUnreadNumber);
 
     /**
      * 更新多条消息
@@ -119,5 +119,11 @@ public interface ChatDbManager {
      * @return
      */
     public long getConversationId(String currentUserName,String targetUserName,String jid);
+
+    /**
+     * 更新某条消息状态
+     * @param message
+     */
+    public void updateMessageStstus(CustomChatMessage message);
 
 }

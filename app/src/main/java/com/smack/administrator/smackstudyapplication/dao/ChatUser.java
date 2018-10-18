@@ -43,15 +43,16 @@ public class ChatUser implements Parcelable {
     //会话id
     private long conversationId;
 
-    @Generated(hash = 401321336)
-    public ChatUser(Long id, String chatUserName, String userName, String userNick,
-            String avatar, String jid) {
+    @Generated(hash = 979533024)
+    public ChatUser(Long id, String chatUserName, String userName, String userNick, String avatar,
+            String jid, long conversationId) {
         this.id = id;
         this.chatUserName = chatUserName;
         this.userName = userName;
         this.userNick = userNick;
         this.avatar = avatar;
         this.jid = jid;
+        this.conversationId = conversationId;
     }
 
     @Generated(hash = 450922767)

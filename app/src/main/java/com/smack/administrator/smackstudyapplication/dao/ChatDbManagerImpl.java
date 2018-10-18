@@ -78,8 +78,8 @@ public class ChatDbManagerImpl implements ChatDbManager{
      */
     @Override
     public long getConversationId(String currentUserName,String targetUserName,String jid) {
-        ConversationInfo conversationInfo = daoSession.getConversationInfoDao().queryBuilder().where(ConversationInfoDao.Properties.UserName.eq(currentUserName),
-                ConversationInfoDao.Properties.ChatUserName.eq(targetUserName)).build().unique();
+        ConversationInfo conversationInfo = daoSession.getConversationInfoDao().queryBuilder().where(ConversationInfoDao.Properties.ChatUserName.eq(currentUserName),
+                ConversationInfoDao.Properties.UserName.eq(targetUserName)).build().unique();
         if(conversationInfo != null){
             return conversationInfo.getId();
         }else{
@@ -179,20 +179,33 @@ public class ChatDbManagerImpl implements ChatDbManager{
 
     /**
      * 存储单条消息
-     * @param message
+     * @param message 消息
+     * @param isAddUnreadNumber 是否增加未读消息数
      * @return
      */
     @Override
-    public Long saveMessage(CustomChatMessage message) {
+    public void saveMessage(CustomChatMessage message,boolean isAddUnreadNumber) {
         ConversationInfo info = daoSession.getConversationInfoDao().queryBuilder().where(ConversationInfoDao.Properties.Id.eq(message.getConversationId())).build().unique();
         if(info != null){
             info.setLastMessage(message.getText());
             info.setDate(message.getTime());
-            info.setUnReadMessageNumber(message.);
+            if(isAddUnreadNumber)
+            info.setUnReadMessageNumber(info.getUnReadMessageNumber() + 1);
         }
-        daoSession.getCustomChatMessageDao().insertOrReplace(message);
+        daoSession.getCustomChatMessageDao().save(message);
+    }
 
-        return l;
+    /**
+     * 更新某条消息状态
+     * @param message
+     */
+    @Override
+    public void updateMessageStstus(CustomChatMessage message){
+        CustomChatMessage message1 = daoSession.getCustomChatMessageDao().queryBuilder().where(CustomChatMessageDao.Properties.Uuid.eq(message.getUuid())).build().unique();
+        if(message1 != null && message != null){
+            message1.setMsgStatusEnum(message.getMsgStatusEnum());
+            daoSession.getCustomChatMessageDao().update(message1);
+        }
     }
 
 

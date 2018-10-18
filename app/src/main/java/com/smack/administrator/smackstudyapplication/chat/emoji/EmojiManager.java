@@ -10,6 +10,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.util.LruCache;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.Xml;
 
 
@@ -157,6 +158,7 @@ public class EmojiManager {
 
         void load(Context context, String assetPath) {
             InputStream is = null;
+            Log.w("AAA","load");
             try {
                 is = context.getAssets().open(assetPath);
                 Xml.parse(is, Xml.Encoding.UTF_8, this);
@@ -165,6 +167,7 @@ public class EmojiManager {
             } catch (SAXException e) {
                 e.printStackTrace();
             } finally {
+                Log.w("AAA","finally");
                 if (is != null) {
                     try {
                         is.close();

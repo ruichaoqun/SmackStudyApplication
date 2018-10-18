@@ -36,8 +36,8 @@ public class ConversationInfo {
     private String chatJid;                 // 对方Jid
     private String lastMessage;             // 最后信息
     private String type;                    // 最后信息类型
-    private Long date;                      // 最后信息发送时间
-    private Integer unReadMessageNumber;    // 未读消息数
+    private long date;                      // 最后信息发送时间
+    private int unReadMessageNumber;    // 未读消息数
 
     @ToMany(referencedJoinProperty = "conversationId")
     private List<CustomChatMessage> messages;
@@ -48,11 +48,10 @@ public class ConversationInfo {
     @Generated(hash = 452604254)
     private transient ConversationInfoDao myDao;
 
-
-    @Generated(hash = 1692554341)
+    @Generated(hash = 522182215)
     public ConversationInfo(Long id, String userName, String chatUserName,
-            String chatJid, String lastMessage, String type, Long date,
-            Integer unReadMessageNumber) {
+            String chatJid, String lastMessage, String type, long date,
+            int unReadMessageNumber) {
         this.id = id;
         this.userName = userName;
         this.chatUserName = chatUserName;
@@ -66,7 +65,6 @@ public class ConversationInfo {
     @Generated(hash = 837114692)
     public ConversationInfo() {
     }
-
 
     public Long getId() {
         return id;
@@ -116,19 +114,19 @@ public class ConversationInfo {
         this.type = type;
     }
 
-    public Long getDate() {
+    public long getDate() {
         return date;
     }
 
-    public void setDate(Long date) {
+    public void setDate(long date) {
         this.date = date;
     }
 
-    public Integer getUnReadMessageNumber() {
+    public int getUnReadMessageNumber() {
         return unReadMessageNumber;
     }
 
-    public void setUnReadMessageNumber(Integer unReadMessageNumber) {
+    public void setUnReadMessageNumber(int unReadMessageNumber) {
         this.unReadMessageNumber = unReadMessageNumber;
     }
 
@@ -197,10 +195,10 @@ public class ConversationInfo {
         myDao.update(this);
     }
 
-    public void newConversationInfo(String userName,String chatUserName,String chatJid){
-        this.userName = userName;
-        this.chatUserName = chatUserName;
-        this.chatJid = chatJid;
+    public void newConversationInfo(String currentUserName, String targetUserName, String jid) {
+        this.chatUserName = currentUserName;
+        this.userName = targetUserName;
+        this.chatJid = jid;
     }
 
     /** called by internal mechanisms, do not call yourself. */

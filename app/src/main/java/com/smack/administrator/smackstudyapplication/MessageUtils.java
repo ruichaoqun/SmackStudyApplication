@@ -1,5 +1,6 @@
 package com.smack.administrator.smackstudyapplication;
 
+import com.smack.administrator.smackstudyapplication.chat.data.MessageType;
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
 
 /**
@@ -38,6 +39,12 @@ public class MessageUtils {
                 return "[图片]";
             case MessageType.TYPE_VOICE:
                 return "[语音]";
+            case MessageType.TYPE_LOCATION:
+                return "[位置]";
+            case MessageType.TYPE_VEDIO:
+                return "[视频]";
+            case MessageType.TYPE_FILE:
+                return "[文件]";
         }
         return "";
     }

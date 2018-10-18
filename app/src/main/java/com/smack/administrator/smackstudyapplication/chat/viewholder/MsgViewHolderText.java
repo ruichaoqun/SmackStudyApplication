@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.smack.administrator.smackstudyapplication.R;
+import com.smack.administrator.smackstudyapplication.chat.emoji.MoonUtil;
 import com.smack.administrator.smackstudyapplication.util.sys.ScreenUtil;
 import com.smack.administrator.smackstudyapplication.widget.recyclerview.adapter.BaseMultiItemFetchLoadAdapter;
 
@@ -41,9 +42,7 @@ public class MsgViewHolderText extends MsgViewHolderBase {
                 onItemClick();
             }
         });
-        //TODO 表情处理
-//        MoonUtil.identifyFaceExpression(NimUIKit.getContext(), bodyTextView, getDisplayText(), ImageSpan.ALIGN_BOTTOM);
-        bodyTextView.setText(getDisplayText());
+        MoonUtil.identifyFaceExpression(context, bodyTextView, getDisplayText(), ImageSpan.ALIGN_BOTTOM);
         bodyTextView.setMovementMethod(LinkMovementMethod.getInstance());
         bodyTextView.setOnLongClickListener(longClickListener);
     }
@@ -58,16 +57,6 @@ public class MsgViewHolderText extends MsgViewHolderBase {
             bodyTextView.setTextColor(Color.WHITE);
             bodyTextView.setPadding(ScreenUtil.dip2px(10), ScreenUtil.dip2px(8), ScreenUtil.dip2px(15), ScreenUtil.dip2px(8));
         }
-    }
-
-    @Override
-    protected int leftBackground() {
-        return 0;
-    }
-
-    @Override
-    protected int rightBackground() {
-        return 0;
     }
 
     protected String getDisplayText() {
