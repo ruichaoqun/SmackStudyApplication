@@ -29,7 +29,7 @@ import org.greenrobot.greendao.annotation.Generated;
  */
 @Entity
 public class CustomChatMessage implements Parcelable {
-    @Id
+    @Id(autoincrement = true)
     private Long id;                    // 主键
     private String uuid;                // 消息uuid，使用当前账号+时间戳拼接
     private int chatType;               // 聊天类型 1.单聊  2.群聊

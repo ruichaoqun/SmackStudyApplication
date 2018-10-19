@@ -1,6 +1,7 @@
 package com.smack.administrator.smackstudyapplication.dao;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.smack.administrator.smackstudyapplication.App;
 import com.smack.administrator.smackstudyapplication.MessageUtils;
@@ -192,7 +193,7 @@ public class ChatDbManagerImpl implements ChatDbManager{
             if(isAddUnreadNumber)
             info.setUnReadMessageNumber(info.getUnReadMessageNumber() + 1);
         }
-        daoSession.getCustomChatMessageDao().save(message);
+        long id = daoSession.getCustomChatMessageDao().insert(message);
     }
 
     /**

@@ -127,9 +127,8 @@ public class XmppConnection {
         public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
             CustomChatMessage chatMessage = gson.fromJson(message.getBody(),CustomChatMessage.class);
             if(chatMessage != null){
-                Log.w("AAA","incomingTime-->"+chatMessage.getTime());
                 //删除收到的消息的主键
-                chatMessage.setConversationId(null);
+                chatMessage.setId(null);
                 //收到消息后更改发送状态
                 chatMessage.setMsgStatusEnum(MsgStatusEnum.success);
                 //更改消息的conversationId为自己的
@@ -150,7 +149,6 @@ public class XmppConnection {
         public void newOutgoingMessage(EntityBareJid to, Message message, Chat chat) {
             CustomChatMessage chatMessage = gson.fromJson(message.getBody(),CustomChatMessage.class);
             if(chatMessage != null){
-                Log.w("AAA","newOutgoingMessageTime-->"+chatMessage.getTime());
                 chatMessage.setMsgStatusEnum(MsgStatusEnum.success);
                 chatDbManager.updateMessageStstus(chatMessage);
                 if( outgoingMessageListener != null){
