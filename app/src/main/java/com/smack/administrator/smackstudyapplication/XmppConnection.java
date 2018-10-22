@@ -103,22 +103,23 @@ public class XmppConnection {
     private ConnectionListener connectionListener = new ConnectionListener() {
         @Override
         public void connected(XMPPConnection connection) {
-
+            Log.w(TAG, "connected: openfire has connected");
         }
 
         @Override
         public void authenticated(XMPPConnection connection, boolean resumed) {
-
+            Log.w(TAG, "connected: openfire has authenticated");
         }
 
         @Override
         public void connectionClosed() {
-
+            Log.w(TAG, "connected: connectionClosed");
         }
 
         @Override
         public void connectionClosedOnError(Exception e) {
-
+            Log.w(TAG, "connected: connectionClosedOnError  ");
+            e.printStackTrace();
         }
     };
 

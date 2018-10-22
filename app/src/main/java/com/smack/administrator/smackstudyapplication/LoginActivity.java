@@ -192,6 +192,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                             Intent intent = new Intent(LoginActivity.this,Main2Activity.class);
                             startActivity(intent);
                             Toast.makeText(LoginActivity.this,"登录成功",Toast.LENGTH_SHORT).show();
+                            finish();
                         }
                     }, new Consumer<Throwable>() {
                         @Override

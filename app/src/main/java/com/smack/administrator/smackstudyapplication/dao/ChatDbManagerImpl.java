@@ -60,6 +60,7 @@ public class ChatDbManagerImpl implements ChatDbManager{
      */
     @Override
     public List<ChatUser> getContactList(String username) {
+        daoSession.getChatUserDao().detachAll();
         return daoSession.getChatUserDao().queryBuilder().where(ChatUserDao.Properties.ChatUserName.eq(username))
                 .build().list();
     }
@@ -70,6 +71,7 @@ public class ChatDbManagerImpl implements ChatDbManager{
      */
     @Override
     public void updateContactList(List<ChatUser> chatUsers){
+        daoSession.getChatUserDao().detachAll();
         daoSession.getChatUserDao().saveInTx(chatUsers);
     }
 
@@ -109,6 +111,7 @@ public class ChatDbManagerImpl implements ChatDbManager{
      */
     @Override
     public List<CustomChatMessage> getMessage(long conversationId) {
+        daoSession.getConversationInfoDao().detachAll();
         ConversationInfo info = daoSession.getConversationInfoDao().queryBuilder()
                 .where(ConversationInfoDao.Properties.Id.eq(conversationId)).unique();
         if(info == null){
@@ -228,7 +231,6 @@ public class ChatDbManagerImpl implements ChatDbManager{
         if(info != null){
             daoSession.getConversationInfoDao().deleteByKey(conversationId);
             daoSession.getConversationInfoDao().detachAll();
-            daoSession.getCustomChatMessageDao().deleteAll();
             return true;
         }
         return false;
