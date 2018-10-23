@@ -5,14 +5,20 @@ import android.text.TextUtils;
 import android.widget.Toast;
 
 
+import com.lzy.imagepicker.ImagePicker;
+import com.lzy.imagepicker.bean.ImageItem;
+import com.lzy.imagepicker.ui.ImageGridActivity;
+import com.lzy.imagepicker.view.CropImageView;
 import com.smack.administrator.smackstudyapplication.R;
 import com.smack.administrator.smackstudyapplication.chat.constant.Extras;
 import com.smack.administrator.smackstudyapplication.chat.constant.RequestCode;
+import com.smack.administrator.smackstudyapplication.util.PicassoImageLoader;
 import com.smack.administrator.smackstudyapplication.util.StringUtil;
 import com.smack.administrator.smackstudyapplication.util.storage.StorageType;
 import com.smack.administrator.smackstudyapplication.util.storage.StorageUtil;
 
 import java.io.File;
+import java.util.ArrayList;
 
 /**
  * Created by zhoujianghua on 2015/7/31.
@@ -28,65 +34,52 @@ public abstract class PickImageAction extends BaseAction {
     private boolean multiSelect;
     private boolean crop = false;
 
-    protected abstract void onPicked(File file);
+    protected abstract void onPicked(ImageItem item);
+
+    private ImagePicker imagePicker = ImagePicker.getInstance();
 
     protected PickImageAction(int iconResId, int titleId, boolean multiSelect) {
         super(iconResId, titleId);
         this.multiSelect = multiSelect;
+        initImagePicker();
+    }
+
+    private void initImagePicker() {
+        imagePicker.setImageLoader(new PicassoImageLoader());   //设置图片加载器
+        imagePicker.setShowCamera(false);  //显示拍照按钮
+        imagePicker.setCrop(false);        //允许裁剪（单选才有效）
+        imagePicker.setMultiMode(true);
+        imagePicker.setSelectLimit(9);    //选中数量限制
+        imagePicker.setOutPutX(1000);//保存文件的宽度。单位像素
+        imagePicker.setOutPutY(1000);//保存文件的高度。单位像素
     }
 
     @Override
     public void onClick() {
         int requestCode = makeRequestCode(RequestCode.PICK_IMAGE);
-        showSelector(getTitleId(), requestCode, multiSelect, tempFile());
-    }
-
-    private String tempFile() {
-        String filename = StringUtil.get32UUID() + JPG;
-        return StorageUtil.getWritePath(filename, StorageType.TYPE_TEMP);
+        showSelector(requestCode);
     }
 
     /**
      * 打开图片选择器
      */
-    private void showSelector(int titleId, final int requestCode, final boolean multiSelect, final String outPath) {
-
+    private void showSelector(final int requestCode) {
+        ArrayList<ImageItem> imageItems = new ArrayList<>();
+        Intent intent = new Intent(getActivity(), ImageGridActivity.class);
+        intent.putParcelableArrayListExtra(ImageGridActivity.EXTRAS_IMAGES,imageItems);
+        getActivity().startActivityForResult(intent, requestCode);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case RequestCode.PICK_IMAGE:
-                onPickImageActivityResult(requestCode, data);
-                break;
-            case RequestCode.PREVIEW_IMAGE_FROM_CAMERA:
-                onPreviewImageActivityResult(requestCode, data);
-                break;
+        if(requestCode == RequestCode.PICK_IMAGE){
+            if(data != null && resultCode == ImagePicker.RESULT_CODE_ITEMS){
+                ArrayList<ImageItem> images = (ArrayList<ImageItem>) data.getSerializableExtra(ImagePicker.EXTRA_RESULT_ITEMS);
+                for (ImageItem item:images) {
+                    onPicked(item);
+                }
+            }
         }
-    }
-
-    /**
-     * 图片选取回调
-     */
-    private void onPickImageActivityResult(int requestCode, Intent data) {
-//        if (data == null) {
-//            Toast.makeText(getActivity(), R.string.picker_image_error, Toast.LENGTH_LONG).show();
-//            return;
-//        }
-//        boolean local = data.getBooleanExtra(Extras.EXTRA_FROM_LOCAL, false);
-//        if (local) {
-//            // 本地相册
-//            sendImageAfterSelfImagePicker(data);
-//        } else {
-//            // 拍照
-//            Intent intent = new Intent();
-//            if (!handleImagePath(intent, data)) {
-//                return;
-//            }
-//
-//            intent.setClass(getActivity(), PreviewImageFromCameraActivity.class);
-//            getActivity().startActivityForResult(intent, makeRequestCode(RequestCode.PREVIEW_IMAGE_FROM_CAMERA));
-//        }
     }
 
     /**

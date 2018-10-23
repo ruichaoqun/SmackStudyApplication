@@ -1,5 +1,6 @@
 package com.smack.administrator.smackstudyapplication.chat.actions;
 
+import com.lzy.imagepicker.bean.ImageItem;
 import com.smack.administrator.smackstudyapplication.R;
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
 
@@ -15,7 +16,8 @@ public class ImageAction extends PickImageAction {
     }
 
     @Override
-    protected void onPicked(File file) {
+    protected void onPicked(ImageItem item) {
+
         CustomChatMessage message = null;
 //        message = MessageBuilder.createImageMessage(getAccount(), getSessionType(), file, file.getName());
         sendMessage(message);
