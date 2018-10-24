@@ -125,6 +125,33 @@ public class MsgThumbImageView extends ImageView {
         builder.into(this);
     }
 
+    public void loadAdUrl(String url,int width,int height,int maskId,String ext){
+        if (TextUtils.isEmpty(url)) {
+            loadAsResource(R.mipmap.xmpp_image_default, maskId);
+            return;
+        }
+
+        setBlendDrawable(maskId);
+
+        RequestBuilder builder;
+        if (ImageUtil.isGif(ext)) {
+            builder = Glide.with(getContext().getApplicationContext()).asGif().load(url);
+        } else {
+            RequestOptions options = new RequestOptions()
+                    .override(width, height)
+                    .fitCenter()
+                    .placeholder(R.mipmap.xmpp_image_default)
+                    .error(R.mipmap.xmpp_image_default);
+
+            builder = Glide.with(getContext().getApplicationContext())
+                    .asBitmap()
+                    .apply(options)
+                    .load(url)
+            ;
+        }
+        builder.into(this);
+    }
+
     private void setBlendDrawable(int maskId) {
         mask = maskId != 0 ? getResources().getDrawable(maskId) : null;
     }

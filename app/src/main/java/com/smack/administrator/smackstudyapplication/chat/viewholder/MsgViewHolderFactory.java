@@ -40,7 +40,12 @@ public class MsgViewHolderFactory {
             return MsgViewHolderText.class;
         }
 
-//        if (message.getType() == 1) {
+        if(message.getType() == MessageType.TYPE_IMAGE){
+            return MsgViewHolderPicture.class;
+        }
+
+
+        //        if (message.getType() == 1) {
 //            return MsgViewHolderText.class;
 //        } else if (message.getMsgType() == MsgTypeEnum.tip) {
 //            return tipMsgViewHolder == null ? MsgViewHolderUnknown.class : tipMsgViewHolder;
@@ -82,6 +87,7 @@ public class MsgViewHolderFactory {
         }
         list.add(MsgViewHolderUnknown.class);
         list.add(MsgViewHolderText.class);
+        list.add(MsgViewHolderPicture.class);
 
         return list;
     }

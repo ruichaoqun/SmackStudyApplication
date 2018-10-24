@@ -74,7 +74,6 @@ public class InputPanel implements IEmoticonSelectedListener,  AitTextChangeList
     protected View emojiButtonInInputBar;// 发送消息按钮
     protected View messageInputBar;
     private ChatUser user;//聊天对象
-    private long conversationId;//会话id
 
 
     // 表情
@@ -113,10 +112,9 @@ public class InputPanel implements IEmoticonSelectedListener,  AitTextChangeList
         init();
     }
 
-    public InputPanel(Container container, View view, List<BaseAction> actions,ChatUser user,long conversationId) {
+    public InputPanel(Container container, View view, List<BaseAction> actions,ChatUser user) {
         this(container, view, actions, true);
         this.user = user;
-        this.conversationId = conversationId;
     }
 
     public void onPause() {
@@ -318,13 +316,13 @@ public class InputPanel implements IEmoticonSelectedListener,  AitTextChangeList
         String text = messageEditText.getText().toString();
         CustomChatMessage textMessage = createTextMessage(text);
 
-        if (container.proxy.sendMessage(textMessage)) {
+        if (container.proxy.sendMessage(textMessage,true)) {
             restoreText(true);
         }
     }
 
     protected CustomChatMessage createTextMessage(String text) {
-        return CustomMessageBuilder.createTextMessage(conversationId, user, text);
+        return CustomMessageBuilder.createTextMessage(user, text);
     }
 
     // 切换成音频，收起键盘，按钮切换成键盘
@@ -755,9 +753,6 @@ public class InputPanel implements IEmoticonSelectedListener,  AitTextChangeList
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode != Activity.RESULT_OK) {
-            return;
-        }
         int index = (requestCode << 16) >> 24;
         if (index != 0) {
             index--;

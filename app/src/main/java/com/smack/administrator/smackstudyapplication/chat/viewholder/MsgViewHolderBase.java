@@ -12,6 +12,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 
+import com.google.gson.Gson;
 import com.smack.administrator.smackstudyapplication.R;
 import com.smack.administrator.smackstudyapplication.XmppConnection;
 import com.smack.administrator.smackstudyapplication.chat.adapter.MsgAdapter;
@@ -60,6 +61,8 @@ public abstract class MsgViewHolderBase extends RecyclerViewHolder<BaseMultiItem
     // contentContainerView的默认长按事件。如果子类需要不同的处理，可覆盖onItemLongClick方法
     // 但如果某些子控件会拦截触摸消息，导致contentContainer收不到长按事件，子控件也可在inflate时重新设置
     protected View.OnLongClickListener longClickListener;
+
+    protected Gson gson = new Gson();
 
     /// -- 以下接口可由子类覆盖或实现
     // 返回具体消息类型内容展示区域的layout res id

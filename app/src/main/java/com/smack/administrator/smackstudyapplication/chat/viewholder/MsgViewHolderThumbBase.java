@@ -1,11 +1,17 @@
 package com.smack.administrator.smackstudyapplication.chat.viewholder;
 
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
 
+import com.netease.nimlib.sdk.msg.attachment.FileAttachment;
 import com.smack.administrator.smackstudyapplication.chat.data.MessageType;
 import com.smack.administrator.smackstudyapplication.R;
+import com.smack.administrator.smackstudyapplication.dao.ImageMsgAttachment;
+import com.smack.administrator.smackstudyapplication.dao.MsgStatusEnum;
 import com.smack.administrator.smackstudyapplication.util.BitmapDecoder;
+import com.smack.administrator.smackstudyapplication.util.ImageUtil;
+import com.smack.administrator.smackstudyapplication.util.StringUtil;
 import com.smack.administrator.smackstudyapplication.util.sys.ScreenUtil;
 import com.smack.administrator.smackstudyapplication.widget.imageview.MsgThumbImageView;
 import com.smack.administrator.smackstudyapplication.widget.recyclerview.adapter.BaseMultiItemFetchLoadAdapter;
@@ -24,6 +30,7 @@ public abstract class MsgViewHolderThumbBase extends MsgViewHolderBase {
     protected MsgThumbImageView thumbnail;
     protected View progressCover;
     protected TextView progressLabel;
+    protected ImageMsgAttachment msgAttachment;
 
     @Override
     protected void inflateContentView() {
@@ -35,53 +42,47 @@ public abstract class MsgViewHolderThumbBase extends MsgViewHolderBase {
 
     @Override
     protected void bindContentView() {
-//        String path = msgAttachment.getPath();
-//        String thumbPath = msgAttachment.getThumbPath();
-//        if (!TextUtils.isEmpty(thumbPath)) {
-//            loadThumbnailImage(thumbPath, false, msgAttachment.getExtension());
-//        } else if (!TextUtils.isEmpty(path)) {
-//            loadThumbnailImage(thumbFromSourceFile(path), true, msgAttachment.getExtension());
-//        } else {
-//            loadThumbnailImage(null, false, msgAttachment.getExtension());
-//            if (message.getAttachStatus() == AttachStatusEnum.transferred
-//                    || message.getAttachStatus() == AttachStatusEnum.def) {
-//                downloadAttachment();
-//            }
-//        }
-
+        msgAttachment =  gson.fromJson(message.getMsgAattachment(),ImageMsgAttachment.class);
+        String path = msgAttachment.getPath();
+        String url = msgAttachment.getUrl();
+        if(msgAttachment != null){
+            setImageSize(path);
+            if(!isReceivedMessage()){
+                if (path != null) {
+                    //thumbnail.loadAsPath(thumbPath, getImageMaxEdge(), getImageMaxEdge(), maskBg());
+                    thumbnail.loadAsPath(path, getImageMaxEdge(), getImageMaxEdge(), maskBg(), msgAttachment.getExtension());
+                } else {
+                    thumbnail.loadAsResource(R.mipmap.xmpp_image_default, maskBg());
+                }
+            }else{
+                if (url != null) {
+                    thumbnail.loadAdUrl(path, getImageMaxEdge(), getImageMaxEdge(), maskBg(), msgAttachment.getExtension());
+                } else {
+                    thumbnail.loadAsResource(R.mipmap.xmpp_image_default, maskBg());
+                }
+            }
+        }
         refreshStatus();
     }
 
     private void refreshStatus() {
-//        FileAttachment attachment = (FileAttachment) message.getAttachment();
-//        if (TextUtils.isEmpty(attachment.getPath()) && TextUtils.isEmpty(attachment.getThumbPath())) {
-//            if (message.getAttachStatus() == AttachStatusEnum.fail || message.getStatus() == MsgStatusEnum.fail) {
-//                alertButton.setVisibility(View.VISIBLE);
-//            } else {
-//                alertButton.setVisibility(View.GONE);
-//            }
-//        }
-//
-//        if (message.getStatus() == MsgStatusEnum.sending
-//                || (isReceivedMessage() && message.getAttachStatus() == AttachStatusEnum.transferring)) {
-//            progressCover.setVisibility(View.VISIBLE);
-//            progressBar.setVisibility(View.VISIBLE);
-//            progressLabel.setVisibility(View.VISIBLE);
-//            progressLabel.setText(StringUtil.getPercentString(getMsgAdapter().getProgress(message)));
-//        } else {
-//            progressCover.setVisibility(View.GONE);
-//            progressBar.setVisibility(View.GONE);
-//            progressLabel.setVisibility(View.GONE);
-//        }
-    }
+        if (TextUtils.isEmpty(msgAttachment.getPath())) {
+            if (message.getMsgStatusEnum() == MsgStatusEnum.fail ) {
+                alertButton.setVisibility(View.VISIBLE);
+            } else {
+                alertButton.setVisibility(View.GONE);
+            }
+        }
 
-    private void loadThumbnailImage(String path, boolean isOriginal, String ext) {
-        setImageSize(path);
-        if (path != null) {
-            //thumbnail.loadAsPath(thumbPath, getImageMaxEdge(), getImageMaxEdge(), maskBg());
-            thumbnail.loadAsPath(path, getImageMaxEdge(), getImageMaxEdge(), maskBg(), ext);
+        if (message.getMsgStatusEnum() == MsgStatusEnum.sending) {
+            progressCover.setVisibility(View.VISIBLE);
+            progressBar.setVisibility(View.VISIBLE);
+            progressLabel.setVisibility(View.VISIBLE);
+            progressLabel.setText(StringUtil.getPercentString(getMsgAdapter().getProgress(message)));
         } else {
-            thumbnail.loadAsResource(R.mipmap.xmpp_image_default, maskBg());
+            progressCover.setVisibility(View.GONE);
+            progressBar.setVisibility(View.GONE);
+            progressLabel.setVisibility(View.GONE);
         }
     }
 
@@ -92,13 +93,13 @@ public abstract class MsgViewHolderThumbBase extends MsgViewHolderBase {
         }
         if (bounds == null) {
             if (message.getType() == MessageType.TYPE_IMAGE) {
-//                bounds = new int[]{attachment.getWidth(), attachment.getHeight()};
+                bounds = new int[]{msgAttachment.getWidth(), msgAttachment.getHeight()};
             }
         }
 
         if (bounds != null) {
-//            ImageUtil.ImageSize imageSize = ImageUtil.getThumbnailDisplaySize(bounds[0], bounds[1], getImageMaxEdge(), getImageMinEdge());
-//            setLayoutParams(imageSize.width, imageSize.height, thumbnail);
+            ImageUtil.ImageSize imageSize = ImageUtil.getThumbnailDisplaySize(bounds[0], bounds[1], getImageMaxEdge(), getImageMinEdge());
+            setLayoutParams(imageSize.width, imageSize.height, thumbnail);
         }
     }
 

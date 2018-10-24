@@ -6,6 +6,7 @@ import android.os.Parcelable;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.Generated;
+import org.greenrobot.greendao.annotation.ToOne;
 
 /**
  * <p>Description.</p>
@@ -41,22 +42,22 @@ public class ChatUser implements Parcelable {
     //IM jid
     private String jid;
     //会话id
-    private long conversationId;
+    private Long conversationId;
 
-    @Generated(hash = 979533024)
-    public ChatUser(Long id, String chatUserName, String userName, String userNick, String avatar,
-            String jid, long conversationId) {
-        this.id = id;
-        this.chatUserName = chatUserName;
-        this.userName = userName;
-        this.userNick = userNick;
-        this.avatar = avatar;
-        this.jid = jid;
-        this.conversationId = conversationId;
+    public Long getId() {
+        return id;
     }
 
-    @Generated(hash = 450922767)
-    public ChatUser() {
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getChatUserName() {
+        return chatUserName;
+    }
+
+    public void setChatUserName(String chatUserName) {
+        this.chatUserName = chatUserName;
     }
 
     public String getUserName() {
@@ -91,27 +92,11 @@ public class ChatUser implements Parcelable {
         this.jid = jid;
     }
 
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getChatUserName() {
-        return chatUserName;
-    }
-
-    public void setChatUserName(String chatUserName) {
-        this.chatUserName = chatUserName;
-    }
-
-    public long getConversationId() {
+    public Long getConversationId() {
         return conversationId;
     }
 
-    public void setConversationId(long conversationId) {
+    public void setConversationId(Long conversationId) {
         this.conversationId = conversationId;
     }
 
@@ -128,7 +113,10 @@ public class ChatUser implements Parcelable {
         dest.writeString(this.userNick);
         dest.writeString(this.avatar);
         dest.writeString(this.jid);
-        dest.writeLong(this.conversationId);
+        dest.writeValue(this.conversationId);
+    }
+
+    public ChatUser() {
     }
 
     protected ChatUser(Parcel in) {
@@ -138,7 +126,19 @@ public class ChatUser implements Parcelable {
         this.userNick = in.readString();
         this.avatar = in.readString();
         this.jid = in.readString();
-        this.conversationId = in.readLong();
+        this.conversationId = (Long) in.readValue(Long.class.getClassLoader());
+    }
+
+    @Generated(hash = 2032862480)
+    public ChatUser(Long id, String chatUserName, String userName, String userNick, String avatar,
+            String jid, Long conversationId) {
+        this.id = id;
+        this.chatUserName = chatUserName;
+        this.userName = userName;
+        this.userNick = userNick;
+        this.avatar = avatar;
+        this.jid = jid;
+        this.conversationId = conversationId;
     }
 
     public static final Parcelable.Creator<ChatUser> CREATOR = new Parcelable.Creator<ChatUser>() {

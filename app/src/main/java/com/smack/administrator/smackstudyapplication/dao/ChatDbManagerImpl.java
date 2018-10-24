@@ -195,8 +195,10 @@ public class ChatDbManagerImpl implements ChatDbManager{
             info.setDate(message.getTime());
             if(isAddUnreadNumber)
             info.setUnReadMessageNumber(info.getUnReadMessageNumber() + 1);
+            daoSession.getConversationInfoDao().update(info);
         }
         long id = daoSession.getCustomChatMessageDao().insert(message);
+        message.setId(id);
     }
 
     /**
@@ -205,10 +207,10 @@ public class ChatDbManagerImpl implements ChatDbManager{
      */
     @Override
     public void updateMessageStstus(CustomChatMessage message){
-        CustomChatMessage message1 = daoSession.getCustomChatMessageDao().queryBuilder().where(CustomChatMessageDao.Properties.Uuid.eq(message.getUuid())).build().unique();
-        if(message1 != null && message != null){
-            message1.setMsgStatusEnum(message.getMsgStatusEnum());
-            daoSession.getCustomChatMessageDao().update(message1);
+        CustomChatMessage m = daoSession.getCustomChatMessageDao().queryBuilder().where(CustomChatMessageDao.Properties.Uuid.eq(message.getUuid())).build().unique();
+        if(m != null && message != null){
+            m.setMsgStatusEnum(message.getMsgStatusEnum());
+            daoSession.getCustomChatMessageDao().update(m);
         }
     }
 

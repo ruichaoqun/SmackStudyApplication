@@ -8,7 +8,7 @@ import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
  */
 public interface ModuleProxy {
     // 发送消息
-    boolean sendMessage(CustomChatMessage msg);
+    boolean sendMessage(CustomChatMessage msg,boolean isSave);
 
     // 消息输入区展开时候的处理
     void onInputPanelExpand();
@@ -20,4 +20,6 @@ public interface ModuleProxy {
     boolean isLongClickEnabled();
 
     void onItemFooterClick(CustomChatMessage message);
+
+    void justShowMessage(CustomChatMessage message);
 }

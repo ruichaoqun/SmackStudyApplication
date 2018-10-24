@@ -149,7 +149,7 @@ public class MessageFragment extends TFragment implements ModuleProxy {
         user = getArguments().getParcelable(Extras.EXTRA_CHAT_USER);
         CustomChatMessage anchor = (CustomChatMessage) getArguments().getSerializable(Extras.EXTRA_ANCHOR);
 
-        Container container = new Container(getActivity(), user.getJid(),this);
+        Container container = new Container(getActivity(), user.getJid(),this,user);
 
 
         if(!TextUtils.isEmpty(user.getJid())){
@@ -168,7 +168,7 @@ public class MessageFragment extends TFragment implements ModuleProxy {
         }
 
         if (inputPanel == null) {
-            inputPanel = new InputPanel(container, rootView, getActionList(),user,user.getConversationId());
+            inputPanel = new InputPanel(container, rootView, getActionList(),user);
         } else {
             inputPanel.reload(container);
         }
@@ -202,7 +202,7 @@ public class MessageFragment extends TFragment implements ModuleProxy {
     XmppConnection.XmppOutgoingChatMessageListener outgoingChatMessageListener = new XmppConnection.XmppOutgoingChatMessageListener() {
         @Override
         public void newOutgoingMessage(EntityBareJid to, CustomChatMessage message, Chat chat) {
-            if(message != null && TextUtils.equals(to.toString(),user.getJid())){
+            if(message != null && TextUtils.equals(message.getRecieveJid(),user.getJid())){
                 //更新消息状态
                 messageListPanel.updateMsgStatu(message);
             }
@@ -229,9 +229,9 @@ public class MessageFragment extends TFragment implements ModuleProxy {
      * ********************** implements ModuleProxy *********************
      */
     @Override
-    public boolean sendMessage(final CustomChatMessage message) {
+    public boolean sendMessage(final CustomChatMessage message,boolean isSave) {
         final CustomChatMessage msg = message;
-        XmppConnection.getInstance().sendMessage(chat,msg)
+        XmppConnection.getInstance().sendMessage(chat,msg,isSave)
                 .subscribe(new Consumer<Boolean>() {
                     @Override
                     public void accept(Boolean aBoolean) throws Exception {
@@ -243,8 +243,15 @@ public class MessageFragment extends TFragment implements ModuleProxy {
 //                        sendFailWithBlackList(code, msg);
                     }
                 });
-        messageListPanel.onMsgSend(message);
+        if(isSave){
+            messageListPanel.onMsgSend(message);
+        }
         return true;
+    }
+
+    @Override
+    public void justShowMessage(CustomChatMessage message) {
+        messageListPanel.onMsgSend(message);
     }
 
 
@@ -267,6 +274,8 @@ public class MessageFragment extends TFragment implements ModuleProxy {
     public void onItemFooterClick(CustomChatMessage message) {
 
     }
+
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

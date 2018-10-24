@@ -5,6 +5,7 @@ import android.content.Intent;
 
 
 import com.smack.administrator.smackstudyapplication.chat.Container;
+import com.smack.administrator.smackstudyapplication.dao.ChatUser;
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
 
 import java.io.Serializable;
@@ -42,6 +43,10 @@ public abstract class BaseAction implements Serializable {
         return container.account;
     }
 
+    public ChatUser getChatUser(){
+        return container.chatUser;
+    }
+
 
     public int getIconResId() {
         return iconResId;
@@ -61,8 +66,12 @@ public abstract class BaseAction implements Serializable {
         // default: empty
     }
 
-    protected void sendMessage(CustomChatMessage message) {
-        container.proxy.sendMessage(message);
+    protected void sendMessage(CustomChatMessage message,boolean isSave) {
+        container.proxy.sendMessage(message,isSave);
+    }
+
+    protected void justShowMessage(CustomChatMessage message){
+        container.proxy.justShowMessage(message);
     }
 
     protected int makeRequestCode(int requestCode) {

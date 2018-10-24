@@ -13,6 +13,7 @@ import com.smack.administrator.smackstudyapplication.dao.ChatUser;
 import com.smack.administrator.smackstudyapplication.dao.ConversationInfo;
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
 import com.smack.administrator.smackstudyapplication.dao.MsgStatusEnum;
+import com.smack.administrator.smackstudyapplication.util.StringUtil;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
@@ -30,6 +31,7 @@ import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
+import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smackx.vcardtemp.VCardManager;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
@@ -37,8 +39,11 @@ import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.EntityFullJid;
 import org.jxmpp.jid.EntityJid;
 import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Domainpart;
 import org.jxmpp.jid.parts.Localpart;
+import org.jxmpp.jid.util.JidUtil;
 import org.jxmpp.stringprep.XmppStringprepException;
+import org.jxmpp.util.XmppStringUtils;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -123,6 +128,9 @@ public class XmppConnection {
         }
     };
 
+    /**
+     * 接收到消息监听
+     */
     private IncomingChatMessageListener incomingChatMessageListener = new IncomingChatMessageListener() {
         @Override
         public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
@@ -133,7 +141,7 @@ public class XmppConnection {
                 //收到消息后更改发送状态
                 chatMessage.setMsgStatusEnum(MsgStatusEnum.success);
                 //更改消息的conversationId为自己的
-                long id = chatDbManager.getConversationId(currentUserName,from.toString().split("@")[0],from.toString());
+                long id = chatDbManager.getConversationId(currentUserName,chatMessage.getSendUserName(),from.toString());
                 chatMessage.setConversationId(id);
                 chatDbManager.saveMessage(chatMessage, activity == null);
                 if(incomingMessageListener != null){
@@ -143,8 +151,9 @@ public class XmppConnection {
         }
     };
 
-
-
+    /**
+     * 发送消息成功监听
+     */
     private OutgoingChatMessageListener outgoingChatMessageListener = new OutgoingChatMessageListener() {
         @Override
         public void newOutgoingMessage(EntityBareJid to, Message message, Chat chat) {
@@ -260,6 +269,11 @@ public class XmppConnection {
                             @Override
                             public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
                                 connection.login(account, password );
+                                String s1 = connection.getUser().toString();
+                                String s2 = connection.getUser().asEntityBareJidString();
+                                String s3 = connection.getUser().asBareJid().toString();
+                                String s4 = connection.getUser().asDomainBareJid().toString();
+
                                 //设置在线状态
                                 setPresence(0);
                                 currentUserName = account;
@@ -417,7 +431,7 @@ public class XmppConnection {
                                 user = new ChatUser();
                                 user.setUserNick(e.getName());
                                 user.setJid(e.getJid().toString());
-                                user.setUserName(e.getJid().toString().split("@")[0]);
+                                user.setUserName(e.getName());
                                 user.setChatUserName(XmppConnection.getInstance().currentUserName);
                                 user.setConversationId(conversationId);
                             }
@@ -468,7 +482,7 @@ public class XmppConnection {
      * @param chat    chat
      * @param message 消息文本
      */
-    public Observable<Boolean> sendMessage(final Chat chat, final CustomChatMessage message) {
+    public Observable<Boolean> sendMessage(final Chat chat, final CustomChatMessage message, final boolean isSave) {
         return Observable.just(message)
                 .filter(new Predicate<CustomChatMessage>() {
                     @Override
@@ -480,7 +494,9 @@ public class XmppConnection {
                     @Override
                     public Boolean apply(CustomChatMessage s) throws Exception {
                         //先存储
-                        chatDbManager.saveMessage(s,false);
+                        if(isSave){
+                            chatDbManager.saveMessage(s,false);
+                        }
                         chat.send(gson.toJson(s));
                         return true;
                     }
@@ -545,7 +561,7 @@ public class XmppConnection {
     public ChatUser getUserInfo(String account) {
         if(TextUtils.equals(account,currentUserName)){
             ChatUser us = new ChatUser();
-            us.setUserNick("芮超群");
+            us.setJid(connection.getUser().asBareJid().toString());
             us.setUserName(account);
             return us;
         }

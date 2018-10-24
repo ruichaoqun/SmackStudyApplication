@@ -9,7 +9,7 @@ import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.Generated;
 
 /**
- * <p>Description.</p>
+ * <p>消息体</p>
  * <p>
  * <b>Maintenance History</b>:
  * <table>
@@ -21,7 +21,7 @@ import org.greenrobot.greendao.annotation.Generated;
  * </tr>
  * <tr>
  * <td>2018-09-26 16:39</td>
- * <td>${User}</td>
+ * <td>Rui Chaoqun</td>
  * <td>All</td>
  * <td>Created.</td>
  * </tr>
@@ -35,21 +35,13 @@ public class CustomChatMessage implements Parcelable {
     private int chatType;               // 聊天类型 1.单聊  2.群聊
     private int type;                   // 消息类型 1.文字类型 2.语音类型 3.图片类型 4.位置 5.视频 6.文件
     private String text;                // 文本消息
-    private String imagePath;           // 图片地址
-    private String originalImagePath;   // 原始大图图片地址
-    private String imageWidth;          // 图片宽
-    private String imageHeight;         // 图片高
-    private String voicePath;           // 语音地址
-    private String videoPath;           // 视频地址
-    private String filePath;            // 文件地址
-    private float longitude;            // 经度
-    private float latitude;             // 纬度
     private long time;                  // 发送日期
     private String sendUserName;        // 发送方账号
     private String recieveUserName;     // 接收方账号
     private String sendJid;             // 发送方jid
     private String recieveJid;          // 接收方jid
     private Long conversationId;        // 会话id（存储这两人对话的消息列表的id）
+    private String msgAattachment;      // 消息附件
     @Convert(converter = MsgStatusEnum.StatusConverter.class,columnType = Integer.class )
     private MsgStatusEnum msgStatusEnum;// 消息状态
 
@@ -91,78 +83,6 @@ public class CustomChatMessage implements Parcelable {
 
     public void setText(String text) {
         this.text = text;
-    }
-
-    public String getImagePath() {
-        return imagePath;
-    }
-
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
-    }
-
-    public String getOriginalImagePath() {
-        return originalImagePath;
-    }
-
-    public void setOriginalImagePath(String originalImagePath) {
-        this.originalImagePath = originalImagePath;
-    }
-
-    public String getImageWidth() {
-        return imageWidth;
-    }
-
-    public void setImageWidth(String imageWidth) {
-        this.imageWidth = imageWidth;
-    }
-
-    public String getImageHeight() {
-        return imageHeight;
-    }
-
-    public void setImageHeight(String imageHeight) {
-        this.imageHeight = imageHeight;
-    }
-
-    public String getVoicePath() {
-        return voicePath;
-    }
-
-    public void setVoicePath(String voicePath) {
-        this.voicePath = voicePath;
-    }
-
-    public String getVideoPath() {
-        return videoPath;
-    }
-
-    public void setVideoPath(String videoPath) {
-        this.videoPath = videoPath;
-    }
-
-    public String getFilePath() {
-        return filePath;
-    }
-
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
-    }
-
-    public float getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(float longitude) {
-        this.longitude = longitude;
-    }
-
-    public float getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(float latitude) {
-        this.latitude = latitude;
     }
 
     public long getTime() {
@@ -213,6 +133,14 @@ public class CustomChatMessage implements Parcelable {
         this.conversationId = conversationId;
     }
 
+    public String getMsgAattachment() {
+        return msgAattachment;
+    }
+
+    public void setMsgAattachment(String msgAattachment) {
+        this.msgAattachment = msgAattachment;
+    }
+
     public MsgStatusEnum getMsgStatusEnum() {
         return msgStatusEnum;
     }
@@ -233,21 +161,13 @@ public class CustomChatMessage implements Parcelable {
         dest.writeInt(this.chatType);
         dest.writeInt(this.type);
         dest.writeString(this.text);
-        dest.writeString(this.imagePath);
-        dest.writeString(this.originalImagePath);
-        dest.writeString(this.imageWidth);
-        dest.writeString(this.imageHeight);
-        dest.writeString(this.voicePath);
-        dest.writeString(this.videoPath);
-        dest.writeString(this.filePath);
-        dest.writeFloat(this.longitude);
-        dest.writeFloat(this.latitude);
         dest.writeLong(this.time);
         dest.writeString(this.sendUserName);
         dest.writeString(this.recieveUserName);
         dest.writeString(this.sendJid);
         dest.writeString(this.recieveJid);
         dest.writeValue(this.conversationId);
+        dest.writeString(this.msgAattachment);
         dest.writeInt(this.msgStatusEnum == null ? -1 : this.msgStatusEnum.ordinal());
     }
 
@@ -260,51 +180,33 @@ public class CustomChatMessage implements Parcelable {
         this.chatType = in.readInt();
         this.type = in.readInt();
         this.text = in.readString();
-        this.imagePath = in.readString();
-        this.originalImagePath = in.readString();
-        this.imageWidth = in.readString();
-        this.imageHeight = in.readString();
-        this.voicePath = in.readString();
-        this.videoPath = in.readString();
-        this.filePath = in.readString();
-        this.longitude = in.readFloat();
-        this.latitude = in.readFloat();
         this.time = in.readLong();
         this.sendUserName = in.readString();
         this.recieveUserName = in.readString();
         this.sendJid = in.readString();
         this.recieveJid = in.readString();
         this.conversationId = (Long) in.readValue(Long.class.getClassLoader());
+        this.msgAattachment = in.readString();
         int tmpMsgStatusEnum = in.readInt();
         this.msgStatusEnum = tmpMsgStatusEnum == -1 ? null : MsgStatusEnum.values()[tmpMsgStatusEnum];
     }
 
-    @Generated(hash = 1291797040)
-    public CustomChatMessage(Long id, String uuid, int chatType, int type, String text,
-            String imagePath, String originalImagePath, String imageWidth, String imageHeight,
-            String voicePath, String videoPath, String filePath, float longitude, float latitude,
-            long time, String sendUserName, String recieveUserName, String sendJid, String recieveJid,
-            Long conversationId, MsgStatusEnum msgStatusEnum) {
+    @Generated(hash = 1851558853)
+    public CustomChatMessage(Long id, String uuid, int chatType, int type, String text, long time,
+            String sendUserName, String recieveUserName, String sendJid, String recieveJid,
+            Long conversationId, String msgAattachment, MsgStatusEnum msgStatusEnum) {
         this.id = id;
         this.uuid = uuid;
         this.chatType = chatType;
         this.type = type;
         this.text = text;
-        this.imagePath = imagePath;
-        this.originalImagePath = originalImagePath;
-        this.imageWidth = imageWidth;
-        this.imageHeight = imageHeight;
-        this.voicePath = voicePath;
-        this.videoPath = videoPath;
-        this.filePath = filePath;
-        this.longitude = longitude;
-        this.latitude = latitude;
         this.time = time;
         this.sendUserName = sendUserName;
         this.recieveUserName = recieveUserName;
         this.sendJid = sendJid;
         this.recieveJid = recieveJid;
         this.conversationId = conversationId;
+        this.msgAattachment = msgAattachment;
         this.msgStatusEnum = msgStatusEnum;
     }
 

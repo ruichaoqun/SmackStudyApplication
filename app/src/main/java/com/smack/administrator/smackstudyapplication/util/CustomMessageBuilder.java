@@ -1,10 +1,13 @@
 package com.smack.administrator.smackstudyapplication.util;
 
+import com.google.gson.Gson;
+import com.lzy.imagepicker.bean.ImageItem;
 import com.smack.administrator.smackstudyapplication.chat.data.ChatType;
 import com.smack.administrator.smackstudyapplication.chat.data.MessageType;
 import com.smack.administrator.smackstudyapplication.XmppConnection;
 import com.smack.administrator.smackstudyapplication.dao.ChatUser;
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
+import com.smack.administrator.smackstudyapplication.dao.ImageMsgAttachment;
 import com.smack.administrator.smackstudyapplication.dao.MsgStatusEnum;
 
 /**
@@ -27,21 +30,55 @@ import com.smack.administrator.smackstudyapplication.dao.MsgStatusEnum;
  * </table>
  */
 public class CustomMessageBuilder {
-    public static CustomChatMessage createTextMessage(long conversationId,ChatUser user,String text){
+
+    /**
+     * 构造文本消息
+     * @param user  聊天对象
+     * @param text 文本
+     * @return
+     */
+    public static CustomChatMessage createTextMessage(ChatUser user,String text){
         String uuid = user.getUserName()+ System.currentTimeMillis();
         ChatUser currentUser = XmppConnection.getInstance().getUserInfo(XmppConnection.getInstance().getCurrentUserName());
         CustomChatMessage message = new CustomChatMessage();
         message.setChatType(ChatType.P2P);
         message.setText(text);
         message.setUuid(uuid);
-        message.setSendUserName(XmppConnection.getInstance().getCurrentUserName());
+        message.setSendUserName(currentUser.getUserName());
         message.setSendJid(currentUser.getJid());
         message.setRecieveUserName(user.getUserName());
         message.setRecieveJid(user.getJid());
         message.setType(MessageType.TYPE_TEXT);
         message.setMsgStatusEnum(MsgStatusEnum.sending);
-        message.setConversationId(conversationId);
+        message.setConversationId(user.getConversationId());
         message.setTime(System.currentTimeMillis());
+        return message;
+    }
+
+    /**
+     * 构建图片消息
+     * @param user 聊天对象
+     * @param item  图片附件
+     * @return
+     */
+    public static CustomChatMessage createImageMessage(ChatUser user,ImageItem item){
+        String uuid = user.getUserName()+ System.currentTimeMillis();
+        ChatUser currentUser = XmppConnection.getInstance().getUserInfo(XmppConnection.getInstance().getCurrentUserName());
+        CustomChatMessage message = new CustomChatMessage();
+        message.setChatType(ChatType.P2P);
+        message.setUuid(uuid);
+        message.setSendUserName(currentUser.getUserName());
+        message.setSendJid(currentUser.getJid());
+        message.setRecieveUserName(user.getUserName());
+        message.setRecieveJid(user.getJid());
+        message.setType(MessageType.TYPE_IMAGE);
+        message.setMsgStatusEnum(MsgStatusEnum.sending);
+        message.setConversationId(user.getConversationId());
+        message.setTime(System.currentTimeMillis());
+        //添加图片附件
+        // (注意，这时的图片并没有上传，这条消息只是存储在本地并显示为正在发送状态
+        // 所以url字段是空的，当上传完毕拿到返回url去更新这条消息，再进行发送消息步骤)
+        message.setMsgAattachment(new Gson().toJson(ImageMsgAttachment.createImageMsgAttachment(item)));
         return message;
     }
 }
