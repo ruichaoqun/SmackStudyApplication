@@ -113,11 +113,18 @@ public class ChatDbManagerImpl implements ChatDbManager{
     public List<CustomChatMessage> getMessage(long conversationId) {
         daoSession.getConversationInfoDao().detachAll();
         ConversationInfo info = daoSession.getConversationInfoDao().queryBuilder()
-                .where(ConversationInfoDao.Properties.Id.eq(conversationId)).unique();
+                .where(ConversationInfoDao.Properties.Id.eq(conversationId)).build().unique();
         if(info == null){
             return null;
         }
         return info.getMessages();
+    }
+
+    @Override
+    public CustomChatMessage getMessageByUUid(String uuid) {
+        CustomChatMessage message = daoSession.getCustomChatMessageDao().queryBuilder()
+                .where(CustomChatMessageDao.Properties.Uuid.eq(uuid)).build().unique();
+        return message;
     }
 
     /**

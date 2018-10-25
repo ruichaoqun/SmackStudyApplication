@@ -7,6 +7,9 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.smack.administrator.smackstudyapplication.chat.activity.BaseMessageActivity;
+import com.smack.administrator.smackstudyapplication.chat.upload.AttachmentProgress;
+import com.smack.administrator.smackstudyapplication.chat.upload.AttachmentProgressManager;
+import com.smack.administrator.smackstudyapplication.chat.upload.AttachmentProgressUpdateListener;
 import com.smack.administrator.smackstudyapplication.dao.ChatDbManager;
 import com.smack.administrator.smackstudyapplication.dao.ChatDbManagerImpl;
 import com.smack.administrator.smackstudyapplication.dao.ChatUser;
@@ -60,6 +63,7 @@ import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
 import io.reactivex.ObservableTransformer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
@@ -83,7 +87,7 @@ import io.reactivex.schedulers.Schedulers;
  * </tr>
  * </table>
  */
-public class XmppConnection {
+public class XmppConnection implements AttachmentProgressUpdateListener {
     protected static final String TAG = "XmppConnection";
     private XMPPTCPConnection connection = null;
     private static XmppConnection instance = null;
@@ -99,10 +103,10 @@ public class XmppConnection {
     private Roster mRoster;                     //好友管理类
     private Gson gson = new Gson();
     private Map<String,ChatUser> chatUserMap;
-    private List<OnMessageListUpdateListener> messageListUpdateListeners = new ArrayList<>();
     private XmppIncomingChatMessageListener incomingMessageListener;
     private XmppOutgoingChatMessageListener outgoingMessageListener;
     private BaseMessageActivity activity;
+    private AttachmentProgressManager attachmentProgressManager;
 
 
     private ConnectionListener connectionListener = new ConnectionListener() {
@@ -177,6 +181,7 @@ public class XmppConnection {
     private XmppConnection() {
         executor = Executors.newCachedThreadPool();
         chatDbManager = ChatDbManagerImpl.getInstance();
+        attachmentProgressManager = new AttachmentProgressManager(this);
     }
 
     public synchronized static XmppConnection getInstance(){
@@ -583,17 +588,6 @@ public class XmppConnection {
 
 
 
-
-
-    protected void onUserException(String exception){
-        Log.e(TAG, "onUserException: " + exception);
-        Intent intent = new Intent(appContext, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.addFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-        intent.putExtra(exception, true);
-        appContext.startActivity(intent);
-    }
-
     public Context getAppContext() {
         return appContext;
     }
@@ -615,6 +609,57 @@ public class XmppConnection {
         this.outgoingMessageListener = outgoingMessageListener;
     }
 
+    //文件上传进度回调
+    @Override
+    public void onEvent(AttachmentProgress progress) {
+        //业务流程：
+        // 更新UI
+        if(xmppAttachProgressListener != null){
+            xmppAttachProgressListener.xmppAttachmentProgress(progress);
+        }
+        //上传完毕则发送消息
+        if(progress.getTransferred() == progress.getTotal()){
+            final CustomChatMessage message = chatDbManager.getMessageByUUid(progress.getUuid());
+            if(message != null){
+                try {
+                    Chat chat = ChatManager.getInstanceFor(connection)
+                            .chatWith(JidCreate.entityBareFrom(message.getRecieveJid()));
+                    sendMessage(chat,message,false)
+                            .subscribe(new Consumer<Boolean>() {
+                                @Override
+                                public void accept(Boolean aBoolean) throws Exception {
+
+                                }
+                            }, new Consumer<Throwable>() {
+                                @Override
+                                public void accept(Throwable throwable) throws Exception {
+                                    message.setMsgStatusEnum(MsgStatusEnum.fail);
+                                    chatDbManager.updateMessageStstus(message);
+                                }
+                            });
+                } catch (XmppStringprepException e) {
+                    message.setMsgStatusEnum(MsgStatusEnum.fail);
+                    chatDbManager.updateMessageStstus(message);
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private XmppAttachProgressListener xmppAttachProgressListener;
+
+    public void setXmppAttachProgressListener(XmppAttachProgressListener xmppAttachProgressListener) {
+        this.xmppAttachProgressListener = xmppAttachProgressListener;
+    }
+
+    public void uploadFileMessage(CustomChatMessage message, String uuid) {
+        attachmentProgressManager.uploadAttachment(message,uuid);
+    }
+
+    public interface XmppAttachProgressListener{
+        void xmppAttachmentProgress(AttachmentProgress attachmentProgress);
+    }
+
     public interface XmppIncomingChatMessageListener{
         public void newIncomingMessage(EntityBareJid from, CustomChatMessage message, Chat chat);
     }
@@ -623,25 +668,6 @@ public class XmppConnection {
         public void newOutgoingMessage(EntityBareJid to, CustomChatMessage message, Chat chat);
     }
 
-    public void addOnMessageListUpdateListener(OnMessageListUpdateListener listUpdateListener){
-        messageListUpdateListeners.add(listUpdateListener);
-    }
-
-    public void removeOnMessageListUpdateListener(OnMessageListUpdateListener listUpdateListener){
-        messageListUpdateListeners.remove(listUpdateListener);
-    }
-
-    public interface OnMessageListUpdateListener{
-        void onMessageListUpdate(CustomChatMessage customChatMessage);
-    }
-
-    public interface onConversationUpdateListener{
-        void onConversationUpdate(ConversationInfo info);
-    }
-
-    public interface OnUnreadMessageUpdateListener{
-        void onUnreadMessageUpdate(int unReadNumber);
-    }
 
     public void attachActivity(BaseMessageActivity messageActivity){
         this.activity = messageActivity;

@@ -22,6 +22,7 @@ import com.smack.administrator.smackstudyapplication.ResponseCode;
 import com.smack.administrator.smackstudyapplication.XmppConnection;
 import com.smack.administrator.smackstudyapplication.chat.Container;
 import com.smack.administrator.smackstudyapplication.chat.QueryDirectionEnum;
+import com.smack.administrator.smackstudyapplication.chat.upload.AttachmentProgress;
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
 import com.smack.administrator.smackstudyapplication.dao.MsgStatusEnum;
 import com.smack.administrator.smackstudyapplication.util.BitmapDecoder;
@@ -301,6 +302,7 @@ public class MessageListPanelEx {
      */
 
     private void registerObservers(boolean register) {
+        XmppConnection.getInstance().setXmppAttachProgressListener(xmppAttachProgressListener);
 //        MsgServiceObserve service = NIMClient.getService(MsgServiceObserve.class);
 //        service.observeMsgStatus(messageStatusObserver, register);
 //        service.observeAttachmentProgress(attachmentProgressObserver, register);
@@ -314,6 +316,13 @@ public class MessageListPanelEx {
 //
 //        MessageListPanelHelper.getInstance().registerObserver(incomingLocalMessageObserver, register);
     }
+
+    private XmppConnection.XmppAttachProgressListener xmppAttachProgressListener = new XmppConnection.XmppAttachProgressListener() {
+        @Override
+        public void xmppAttachmentProgress(AttachmentProgress attachmentProgress) {
+            onAttachmentProgressChange(attachmentProgress);
+        }
+    };
 
 //    /**
 //     * 消息状态变化观察者
@@ -404,15 +413,15 @@ public class MessageListPanelEx {
         }
     }
 
-//    private void onAttachmentProgressChange(AttachmentProgress progress) {
-//        int index = getItemIndex(progress.getUuid());
-//        if (index >= 0 && index < items.size()) {
-//            CustomChatMessage item = items.get(index);
-//            float value = (float) progress.getTransferred() / (float) progress.getTotal();
-//            adapter.putProgress(item, value);
-//            refreshViewHolderByIndex(index);
-//        }
-//    }
+    private void onAttachmentProgressChange(AttachmentProgress progress) {
+        int index = getItemIndex(progress.getUuid());
+        if (index >= 0 && index < items.size()){
+            CustomChatMessage item = items.get(index);
+            float value = (float) progress.getTransferred() / (float) progress.getTotal();
+            adapter.putProgress(item, value);
+            refreshViewHolderByIndex(index);
+        }
+    }
 
     public boolean isMyMessage(CustomChatMessage message) {
         return TextUtils.equals(message.getSendUserName(), XmppConnection.getInstance().getCurrentUserName());
