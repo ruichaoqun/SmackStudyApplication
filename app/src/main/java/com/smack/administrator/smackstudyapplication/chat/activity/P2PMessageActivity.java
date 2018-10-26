@@ -45,6 +45,7 @@ public class P2PMessageActivity extends BaseMessageActivity {
         bundle.putParcelable(Extras.EXTRA_CHAT_USER,chatUser);
         fragment.setArguments(bundle);
         fragment.setContainerId(R.id.message_fragment_container);
+
         return fragment;
     }
 

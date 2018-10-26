@@ -67,11 +67,11 @@ public class MessageFragment extends TFragment implements ModuleProxy {
     private Chat chat;
     private Handler uiHandler;
 
-
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         parseIntent();
+
     }
 
     @Override

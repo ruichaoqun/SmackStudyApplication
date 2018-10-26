@@ -578,6 +578,7 @@ public class InputPanel implements IEmoticonSelectedListener,  AitTextChangeList
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                Log.w("AAA",event.getActionMasked()+"");
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     touched = true;
                     initAudioRecord();
