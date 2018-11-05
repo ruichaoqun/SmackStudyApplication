@@ -230,7 +230,8 @@ public class ChatDbManagerImpl implements ChatDbManager{
 
     @Override
     public boolean updateMessage(CustomChatMessage message) {
-        return false;
+        daoSession.getCustomChatMessageDao().update(message);
+        return true;
     }
 
     @Override

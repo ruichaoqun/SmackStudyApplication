@@ -23,6 +23,7 @@ public class AudioMsgAttachment {
     private String filePath;        // 本地语音地址
     private String url;             // 服务器语音地址
     private long duration;          // 语音长度
+    private int attachmentStatus;   // 文件状态 0：草稿 1：下载中 2：已下载到本地 3.失败
 
     public String getFilePath() {
         return filePath;
@@ -46,5 +47,13 @@ public class AudioMsgAttachment {
 
     public void setDuration(long duration) {
         this.duration = duration;
+    }
+
+    public int getAttachmentStatus() {
+        return attachmentStatus;
+    }
+
+    public void setAttachmentStatus(int attachmentStatus) {
+        this.attachmentStatus = attachmentStatus;
     }
 }

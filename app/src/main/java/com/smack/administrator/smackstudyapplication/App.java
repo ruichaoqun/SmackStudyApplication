@@ -6,6 +6,7 @@ import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.netease.nimlib.sdk.NIMClient;
 import com.smack.administrator.smackstudyapplication.util.log.LogUtil;
 import com.smack.administrator.smackstudyapplication.util.storage.StorageType;
 import com.smack.administrator.smackstudyapplication.util.storage.StorageUtil;
@@ -44,10 +45,10 @@ public class App extends Application {
         super.onCreate();
         application = this;
         XmppConnection.getInstance().connect(this);
-
         String appCacheDir = getAppCacheDir(this) + "/app";
         StorageUtil.init(this, appCacheDir);
         ScreenUtil.init(this);
+        NIMClient.init(this, null, NimSDKOptionConfig.getSDKOptions(this));
         // init log
         String path = StorageUtil.getDirectoryByDirType(StorageType.TYPE_LOG);
         LogUtil.init(path, Log.DEBUG);

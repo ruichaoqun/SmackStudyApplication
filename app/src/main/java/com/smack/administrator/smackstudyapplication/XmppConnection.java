@@ -617,7 +617,7 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
         if(xmppAttachProgressListener != null){
             xmppAttachProgressListener.xmppAttachmentProgress(progress);
         }
-        //上传完毕则发送消息
+        //上传完毕后发送消息
         if(progress.getTransferred() == progress.getTotal()){
             final CustomChatMessage message = chatDbManager.getMessageByUUid(progress.getUuid());
             if(message != null){

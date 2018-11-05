@@ -417,9 +417,12 @@ public class MessageListPanelEx {
         int index = getItemIndex(progress.getUuid());
         if (index >= 0 && index < items.size()){
             CustomChatMessage item = items.get(index);
-            float value = (float) progress.getTransferred() / (float) progress.getTotal();
-            adapter.putProgress(item, value);
-            refreshViewHolderByIndex(index);
+            if(item.getType() == 3){
+                float value = (float) progress.getTransferred() / (float) progress.getTotal();
+                adapter.putProgress(item, value);
+                refreshViewHolderByIndex(index);
+            }
+
         }
     }
 

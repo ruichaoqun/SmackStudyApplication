@@ -29,6 +29,7 @@ import com.netease.nimlib.sdk.media.record.AudioRecorder;
 import com.netease.nimlib.sdk.media.record.RecordType;
 import com.netease.nimlib.sdk.msg.attachment.MsgAttachment;
 import com.smack.administrator.smackstudyapplication.R;
+import com.smack.administrator.smackstudyapplication.XmppConnection;
 import com.smack.administrator.smackstudyapplication.chat.AitTextChangeListener;
 import com.smack.administrator.smackstudyapplication.chat.Container;
 import com.smack.administrator.smackstudyapplication.chat.IAudioRecordCallback;
@@ -718,8 +719,14 @@ public class InputPanel implements IEmoticonSelectedListener,  AitTextChangeList
 
     @Override
     public void onRecordSuccess(File audioFile, long audioLength, RecordType recordType) {
-//        CustomChatMessage audioMessage = MessageBuilder.createAudioMessage(container.account, container.sessionType, audioFile, audioLength);
-//        container.proxy.sendMessage(audioMessage);
+        CustomChatMessage audioMessage = CustomMessageBuilder.createAudioMessage(user, audioFile, audioLength,recordType);
+        //1.存储到本地
+        XmppConnection.getInstance().getChatDbManager().saveMessage(audioMessage,false);
+        //2.展示在UI上,这儿只是展示在列表中，并不发送，发送要等到拿到图片url再发送
+        container.proxy.justShowMessage(audioMessage);
+        //3.上传语音到服务器
+        //TODO 后期这儿添加上传语音功能，这儿先模拟上传
+        XmppConnection.getInstance().uploadFileMessage(audioMessage,audioMessage.getUuid());
     }
 
     @Override

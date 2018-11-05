@@ -2,6 +2,9 @@ package com.smack.administrator.smackstudyapplication.dao;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
+
+import com.google.gson.Gson;
 
 import org.greenrobot.greendao.annotation.Convert;
 import org.greenrobot.greendao.annotation.Entity;
@@ -221,4 +224,8 @@ public class CustomChatMessage implements Parcelable {
             return new CustomChatMessage[size];
         }
     };
+
+    public boolean isTheSame(CustomChatMessage message) {
+        return TextUtils.equals(this.uuid,message.getUuid());
+    }
 }
