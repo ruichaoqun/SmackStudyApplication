@@ -1,7 +1,16 @@
 package com.smack.administrator.smackstudyapplication.dao;
 
+import android.content.Context;
+import android.text.TextUtils;
+
+import com.smack.administrator.smackstudyapplication.App;
+import com.smack.administrator.smackstudyapplication.MessageUtils;
+
 import org.jxmpp.jid.EntityBareJid;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -16,41 +25,101 @@ import java.util.List;
  * <th>Content</th>
  * </tr>
  * <tr>
- * <td>2018-09-27 09:45</td>
+ * <td>2018-09-27 09:46</td>
  * <td>${User}</td>
  * <td>All</td>
  * <td>Created.</td>
  * </tr>
  * </table>
  */
-public interface ChatDbManager {
+public class ChatDbManager {
+    private static ChatDbManager instance;
+    private static DaoSession daoSession;
+
+    private ChatDbManager() {
+        DaoMaster.DevOpenHelper devOpenHelper = new DaoMaster.DevOpenHelper(App.application,"smackIm.db",null);
+        DaoMaster daoMaster = new DaoMaster(devOpenHelper.getWritableDatabase());
+        daoSession = daoMaster.newSession();
+    }
+
+    public synchronized static ChatDbManager getInstance(){
+        if(instance == null){
+            synchronized (ChatDbManager.class){
+                if(instance == null){
+                    instance = new ChatDbManager();
+                }
+            }
+        }
+        return instance;
+    }
 
     /**
      * 获取好友联系列表
-     * @param username
+     * @param username 当前登录账号
      * @return
      */
-    public List<ChatUser> getContactList(String username);
+    public List<ChatUser> getContactList(String username) {
+        daoSession.getChatUserDao().detachAll();
+        return daoSession.getChatUserDao().queryBuilder().where(ChatUserDao.Properties.ChatUserName.eq(username))
+                .build().list();
+    }
+
+    /**
+     * 更新好友列表
+     * @param chatUsers
+     */
+    public void updateContactList(List<ChatUser> chatUsers){
+        daoSession.getChatUserDao().detachAll();
+        daoSession.getChatUserDao().saveInTx(chatUsers);
+    }
+
+    /**
+     * 获取与该账号对应的会话id
+     * @param targetUserName
+     */
+    public long getConversationId(String currentUserName,String targetUserName,String jid) {
+        ConversationInfo conversationInfo = daoSession.getConversationInfoDao().queryBuilder().where(ConversationInfoDao.Properties.ChatUserName.eq(currentUserName),
+                ConversationInfoDao.Properties.UserName.eq(targetUserName)).build().unique();
+        if(conversationInfo != null){
+            return conversationInfo.getId();
+        }else{
+            ConversationInfo info = new ConversationInfo();
+            info.newConversationInfo(currentUserName,targetUserName,jid);
+            long conversationId = daoSession.getConversationInfoDao().insert(info);
+            return conversationId;
+        }
+    }
 
     /**
      * 获取当前用户所有会话列表
-     * @param userName
+     * @param userName username 当前登录账号
      */
-    public List<ConversationInfo> getConversations(String userName);
+    public List<ConversationInfo> getConversations(String userName) {
+        List<ConversationInfo> conversationInfos = daoSession.getConversationInfoDao().queryBuilder()
+                .where(ConversationInfoDao.Properties.UserName.eq(userName)).build().list();
+        return conversationInfos;
+    }
 
     /**
      * 通过会话id获取消息列表
      * @param conversationId
      * @return
      */
-    public List<CustomChatMessage> getMessage(long conversationId);
+    public List<CustomChatMessage> getMessage(long conversationId) {
+        daoSession.getConversationInfoDao().detachAll();
+        ConversationInfo info = daoSession.getConversationInfoDao().queryBuilder()
+                .where(ConversationInfoDao.Properties.Id.eq(conversationId)).build().unique();
+        if(info == null){
+            return null;
+        }
+        return info.getMessages();
+    }
 
-    /**
-     * 通过uuid获取某条消息
-     * @param uuid
-     * @return
-     */
-    public CustomChatMessage getMessageByUUid(String uuid);
+    public CustomChatMessage getMessageByUUid(String uuid) {
+        CustomChatMessage message = daoSession.getCustomChatMessageDao().queryBuilder()
+                .where(CustomChatMessageDao.Properties.Uuid.eq(uuid)).build().unique();
+        return message;
+    }
 
     /**
      * 通过对方账号获取消息列表
@@ -58,79 +127,112 @@ public interface ChatDbManager {
      * @param targetUserName 对方的账号
      * @return
      */
-    public List<CustomChatMessage> getMessage(String userName, String targetUserName);
+    public List<CustomChatMessage> getMessage(String userName, String targetUserName) {
+        List<CustomChatMessage> messageList = new ArrayList<>();
+        messageList.addAll(daoSession.getCustomChatMessageDao().queryBuilder()
+                .where(CustomChatMessageDao.Properties.SendUserName.eq(userName),
+                        CustomChatMessageDao.Properties.RecieveUserName.eq(targetUserName)).build().list());
+        messageList.addAll(daoSession.getCustomChatMessageDao().queryBuilder()
+                .where(CustomChatMessageDao.Properties.SendUserName.eq(targetUserName),
+                        CustomChatMessageDao.Properties.RecieveUserName.eq(userName)).build().list());
+        Collections.sort(messageList, new Comparator<CustomChatMessage>() {
+            @Override
+            public int compare(CustomChatMessage o1, CustomChatMessage o2) {
+                return (int) (o1.getTime() - o2.getTime());
+            }
+        });
+        return messageList;
+    }
 
-
-
-    /**
-     * 当收到新消息时，更新会话列表
-     * @param message
-     * @param userName
-     * @param jid
-     * @return
-     */
-    public Long insertOrUpdateConversation(CustomChatMessage message, String userName, EntityBareJid jid);
+    // 新消息到达后更新会话列表
+    public Long insertOrUpdateConversation(CustomChatMessage message, String userName, EntityBareJid jid) {
+        String targetUserName = TextUtils.equals(userName,message.getSendUserName())?message.getRecieveUserName():message.getSendUserName();
+        ConversationInfo info = daoSession.getConversationInfoDao().queryBuilder()
+                .where(ConversationInfoDao.Properties.UserName.eq(userName),ConversationInfoDao.Properties.ChatUserName.eq(targetUserName)).build().unique();
+        if(info != null){
+            info.setDate(message.getTime());
+            info.setLastMessage(MessageUtils.getMessageDiscription(message));
+            info.setUnReadMessageNumber(info.getUnReadMessageNumber()+1);
+            daoSession.getConversationInfoDao().update(info);
+            daoSession.getConversationInfoDao().detachAll();
+            return info.getId();
+        }else{
+            info = new ConversationInfo();
+            info.setUserName(userName);
+            info.setChatUserName(targetUserName);
+            info.setUnReadMessageNumber(1);
+            info.setChatJid(jid.toString());
+            info.setDate(message.getTime());
+            info.setLastMessage(MessageUtils.getMessageDiscription(message));
+            long id = daoSession.getConversationInfoDao().insert(info);
+            daoSession.getConversationInfoDao().detachAll();
+            return id;
+        }
+    }
 
     /**
      * 存储多条消息
      * @param messages
      * @return
      */
-    public void saveMessage(List<CustomChatMessage> messages);
+    public void saveMessage(List<CustomChatMessage> messages) {
+        daoSession.getCustomChatMessageDao().insertInTx(messages);
+    }
 
     /**
      * 存储单条消息
-     * @param message
+     * @param message 消息
+     * @param isAddUnreadNumber 是否增加未读消息数
      * @return
      */
-    public void saveMessage(CustomChatMessage message, boolean isAddUnreadNumber);
-
-    /**
-     * 更新多条消息
-     * @param messages
-     * @return
-     */
-    public boolean updateMessages(List<CustomChatMessage> messages);
-
-    /**
-     * 更新单条消息
-     * @param message
-     * @return
-     */
-    public boolean updateMessage(CustomChatMessage message);
-
-    /**
-     * 删除单个会话
-     * @param conversationId
-     * @return
-     */
-    public boolean deleteConversation(long conversationId);
-
-    /**
-     * 插入或者更新单个会话
-     * @param conversationInfo
-     * @return
-     */
-    public boolean insertOrUpdateConversation(ConversationInfo conversationInfo);
-
-    /**
-     * 更新好友列表
-     * @param chatUsers 好友集合
-     */
-    public void updateContactList(List<ChatUser> chatUsers);
-
-    /**
-     *
-     * @param currentUserName 当前登录的账号
-     * @param targetUserName 会话对象的账号
-     * @return
-     */
-    public long getConversationId(String currentUserName,String targetUserName,String jid);
+    public void saveMessage(CustomChatMessage message,boolean isAddUnreadNumber) {
+        ConversationInfo info = daoSession.getConversationInfoDao().queryBuilder().where(ConversationInfoDao.Properties.Id.eq(message.getConversationId())).build().unique();
+        if(info != null){
+            info.setLastMessage(message.getText());
+            info.setDate(message.getTime());
+            if(isAddUnreadNumber)
+            info.setUnReadMessageNumber(info.getUnReadMessageNumber() + 1);
+            daoSession.getConversationInfoDao().update(info);
+        }
+        long id = daoSession.getCustomChatMessageDao().insert(message);
+        message.setId(id);
+    }
 
     /**
      * 更新某条消息状态
      * @param message
      */
-    public void updateMessageStstus(CustomChatMessage message);
+    public void updateMessageStstus(CustomChatMessage message){
+        CustomChatMessage m = daoSession.getCustomChatMessageDao().queryBuilder().where(CustomChatMessageDao.Properties.Uuid.eq(message.getUuid())).build().unique();
+        if(m != null && message != null){
+            m.setMsgStatusEnum(message.getMsgStatusEnum());
+            daoSession.getCustomChatMessageDao().update(m);
+        }
+    }
 
+
+
+    public boolean updateMessages(List<CustomChatMessage> messages) {
+        return false;
+    }
+
+    public boolean updateMessage(CustomChatMessage message) {
+        daoSession.getCustomChatMessageDao().update(message);
+        return true;
+    }
+
+    public boolean deleteConversation(long conversationId) {
+        ConversationInfo info = daoSession.getConversationInfoDao().queryBuilder()
+                .where(ConversationInfoDao.Properties.Id.eq(conversationId)).unique();
+        if(info != null){
+            daoSession.getConversationInfoDao().deleteByKey(conversationId);
+            daoSession.getConversationInfoDao().detachAll();
+            return true;
+        }
+        return false;
+    }
+
+    public boolean insertOrUpdateConversation(ConversationInfo conversationInfo) {
+        return false;
+    }
 }

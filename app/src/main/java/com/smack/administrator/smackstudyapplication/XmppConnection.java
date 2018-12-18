@@ -1,7 +1,6 @@
 package com.smack.administrator.smackstudyapplication;
 
 import android.content.Context;
-import android.content.Intent;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -11,12 +10,11 @@ import com.smack.administrator.smackstudyapplication.chat.upload.AttachmentProgr
 import com.smack.administrator.smackstudyapplication.chat.upload.AttachmentProgressManager;
 import com.smack.administrator.smackstudyapplication.chat.upload.AttachmentProgressUpdateListener;
 import com.smack.administrator.smackstudyapplication.dao.ChatDbManager;
-import com.smack.administrator.smackstudyapplication.dao.ChatDbManagerImpl;
 import com.smack.administrator.smackstudyapplication.dao.ChatUser;
-import com.smack.administrator.smackstudyapplication.dao.ConversationInfo;
 import com.smack.administrator.smackstudyapplication.dao.CustomChatMessage;
 import com.smack.administrator.smackstudyapplication.dao.MsgStatusEnum;
-import com.smack.administrator.smackstudyapplication.util.StringUtil;
+import com.smack.administrator.smackstudyapplication.manager.XmppMessageManager;
+import com.smack.administrator.smackstudyapplication.util.log.LogUtil;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
@@ -28,30 +26,28 @@ import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.chat2.OutgoingChatMessageListener;
+import org.jivesoftware.smack.debugger.SmackDebugger;
+import org.jivesoftware.smack.debugger.SmackDebuggerFactory;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
-import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.iqregister.AccountManager;
+import org.jivesoftware.smackx.offline.OfflineMessageManager;
 import org.jivesoftware.smackx.vcardtemp.VCardManager;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 import org.jxmpp.jid.EntityBareJid;
-import org.jxmpp.jid.EntityFullJid;
-import org.jxmpp.jid.EntityJid;
 import org.jxmpp.jid.impl.JidCreate;
-import org.jxmpp.jid.parts.Domainpart;
 import org.jxmpp.jid.parts.Localpart;
-import org.jxmpp.jid.util.JidUtil;
 import org.jxmpp.stringprep.XmppStringprepException;
-import org.jxmpp.util.XmppStringUtils;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -102,7 +98,7 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
     private ChatDbManager chatDbManager;
     private Roster mRoster;                     //好友管理类
     private Gson gson = new Gson();
-    private Map<String,ChatUser> chatUserMap;
+    private Map<String, ChatUser> chatUserMap;
     private XmppIncomingChatMessageListener incomingMessageListener;
     private XmppOutgoingChatMessageListener outgoingMessageListener;
     private BaseMessageActivity activity;
@@ -138,18 +134,18 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
     private IncomingChatMessageListener incomingChatMessageListener = new IncomingChatMessageListener() {
         @Override
         public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
-            CustomChatMessage chatMessage = gson.fromJson(message.getBody(),CustomChatMessage.class);
-            if(chatMessage != null){
+            CustomChatMessage chatMessage = gson.fromJson(message.getBody(), CustomChatMessage.class);
+            if (chatMessage != null) {
                 //删除收到的消息的主键
                 chatMessage.setId(null);
                 //收到消息后更改发送状态
                 chatMessage.setMsgStatusEnum(MsgStatusEnum.success);
                 //更改消息的conversationId为自己的
-                long id = chatDbManager.getConversationId(currentUserName,chatMessage.getSendUserName(),from.toString());
+                long id = chatDbManager.getConversationId(currentUserName, chatMessage.getSendUserName(), from.toString());
                 chatMessage.setConversationId(id);
                 chatDbManager.saveMessage(chatMessage, activity == null);
-                if(incomingMessageListener != null){
-                    incomingMessageListener.newIncomingMessage(from,chatMessage,chat);
+                if (incomingMessageListener != null) {
+                    incomingMessageListener.newIncomingMessage(from, chatMessage, chat);
                 }
             }
         }
@@ -161,12 +157,12 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
     private OutgoingChatMessageListener outgoingChatMessageListener = new OutgoingChatMessageListener() {
         @Override
         public void newOutgoingMessage(EntityBareJid to, Message message, Chat chat) {
-            CustomChatMessage chatMessage = gson.fromJson(message.getBody(),CustomChatMessage.class);
-            if(chatMessage != null){
+            CustomChatMessage chatMessage = gson.fromJson(message.getBody(), CustomChatMessage.class);
+            if (chatMessage != null) {
                 chatMessage.setMsgStatusEnum(MsgStatusEnum.success);
                 chatDbManager.updateMessageStstus(chatMessage);
-                if( outgoingMessageListener != null){
-                    outgoingMessageListener.newOutgoingMessage(to,chatMessage,chat);
+                if (outgoingMessageListener != null) {
+                    outgoingMessageListener.newOutgoingMessage(to, chatMessage, chat);
                 }
             }
         }
@@ -180,12 +176,12 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
 
     private XmppConnection() {
         executor = Executors.newCachedThreadPool();
-        chatDbManager = ChatDbManagerImpl.getInstance();
+        chatDbManager = ChatDbManager.getInstance();
         attachmentProgressManager = new AttachmentProgressManager(this);
     }
 
-    public synchronized static XmppConnection getInstance(){
-        if(instance == null){
+    public synchronized static XmppConnection getInstance() {
+        if (instance == null) {
             instance = new XmppConnection();
         }
         return instance;
@@ -208,9 +204,9 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
         }
     }
 
-    private void openConnection(){
-        try{
-            if(connection == null || connection.isAuthenticated()){
+    private void openConnection() {
+        try {
+            if (connection == null || connection.isAuthenticated()) {
                 //调试模式
                 SmackConfiguration.DEBUG = true;
                 XMPPTCPConnectionConfiguration.Builder config = XMPPTCPConnectionConfiguration.builder();
@@ -242,7 +238,7 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
                 //默认接受所有订阅请求
                 mRoster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             connection = null;
             isConnect = false;
@@ -259,7 +255,7 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
      * @param account
      * @param password
      */
-    public Observable<Boolean> login(final String account, final String password){
+    public Observable<Boolean> login(final String account, final String password) {
         return Observable.just("")
                 .filter(new Predicate<String>() {
                     @Override
@@ -273,16 +269,13 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
                         return Observable.create(new ObservableOnSubscribe<Boolean>() {
                             @Override
                             public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
-                                connection.login(account, password );
-                                String s1 = connection.getUser().toString();
-                                String s2 = connection.getUser().asEntityBareJidString();
-                                String s3 = connection.getUser().asBareJid().toString();
-                                String s4 = connection.getUser().asDomainBareJid().toString();
-
-                                //设置在线状态
-                                setPresence(0);
+                                //登录
+                                connection.login(account, password);
+                                //设置当前登录人
                                 currentUserName = account;
                                 initChatUsers();
+                                //设置在线状态
+                                getOfflineMessage();
                                 emitter.onNext(true);
                             }
                         });
@@ -292,16 +285,67 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
                 .observeOn(AndroidSchedulers.mainThread());
     }
 
+    public void logout(){
+        Log.w(TAG, "XMPPConnectionManager 退出登陆");
+        //这里需要先将登陆状态改变为“离线”，再断开连接，不然在后台还是上线的状态
+        Presence presence = new Presence(Presence.Type.unavailable);
+        try {
+            connection.sendStanza(presence);
+            if (connection != null) {
+                connection.disconnect();
+                connection = null;
+            }
+        } catch (SmackException.NotConnectedException  e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void initChatUsers() {
-        if(chatUserMap == null){
+        if (chatUserMap == null) {
             chatUserMap = new HashMap<>();
         }
         List<ChatUser> users = chatDbManager.getContactList(currentUserName);
-        if(users != null){
-            for (ChatUser user: users) {
-                chatUserMap.put(user.getJid(),user);
+        if (users != null) {
+            for (ChatUser user : users) {
+                chatUserMap.put(user.getJid(), user);
             }
         }
+    }
+
+    /**
+     * 获取离线消息
+     */
+    public void getOfflineMessage() throws XMPPException.XMPPErrorException, SmackException.NotConnectedException, InterruptedException, SmackException.NoResponseException {
+        OfflineMessageManager offlineManager = new OfflineMessageManager(connection);
+        Log.i("离线消息数量: ", "" + offlineManager.getMessageCount());
+        Iterator<Message> it = offlineManager.getMessages().iterator();
+
+        while (it.hasNext()) {
+            org.jivesoftware.smack.packet.Message message = it.next();
+            Log.i("收到离线消息", "Received from 【" + message.getFrom()
+                    + "】 message: " + message.getBody());
+            if (message != null && message.getBody() != null
+                    && !message.getBody().equals("null")) {
+                //解析离线消息
+                CustomChatMessage chatMessage = gson.fromJson(message.getBody(), CustomChatMessage.class);
+                if (chatMessage != null) {
+                    //删除收到的消息的主键
+                    chatMessage.setId(null);
+                    //收到消息后更改发送状态
+                    chatMessage.setMsgStatusEnum(MsgStatusEnum.success);
+                    //更改消息的conversationId为自己的
+                    long id = chatDbManager.getConversationId(XmppConnection.getInstance().getCurrentUserName(), chatMessage.getSendUserName(), chatMessage.getSendJid());
+                    chatMessage.setConversationId(id);
+                    chatDbManager.saveMessage(chatMessage, true);
+                }
+            }
+        }
+        //删除离线消息
+        offlineManager.deleteMessages();
+        //将状态设置成在线
+        setPresence(0);
     }
 
     /**
@@ -335,24 +379,24 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
                     Log.v("state", "设置离开");
                     break;
                 case 4:
-//                    Roster roster = con.getRoster();
-//                    Collection<RosterEntry> entries = roster.getEntries();
-//                    for (RosterEntry entry : entries) {
-//                        presence = new Presence(Presence.Type.unavailable);
-//                        presence.setPacketID(Packet.ID_NOT_AVAILABLE);
-//                        presence.setFrom(con.getUser());
-//                        presence.setTo(entry.getUser());
-//                        con.sendPacket(presence);
-//                        Log.v("state", presence.toXML());
-//                    }
-//                    // 向同一用户的其他客户端发送隐身状态
-//                    presence = new Presence(Presence.Type.unavailable);
-//                    presence.setPacketID(Packet.ID_NOT_AVAILABLE);
-//                    presence.setFrom(con.getUser());
-//                    presence.setTo(StringUtils.parseBareAddress(con.getUser()));
-//                    con.sendStanza(presence);
-//                    Log.v("state", "设置隐身");
-//                    break;
+                    //                    Roster roster = con.getRoster();
+                    //                    Collection<RosterEntry> entries = roster.getEntries();
+                    //                    for (RosterEntry entry : entries) {
+                    //                        presence = new Presence(Presence.Type.unavailable);
+                    //                        presence.setPacketID(Packet.ID_NOT_AVAILABLE);
+                    //                        presence.setFrom(con.getUser());
+                    //                        presence.setTo(entry.getUser());
+                    //                        con.sendPacket(presence);
+                    //                        Log.v("state", presence.toXML());
+                    //                    }
+                    //                    // 向同一用户的其他客户端发送隐身状态
+                    //                    presence = new Presence(Presence.Type.unavailable);
+                    //                    presence.setPacketID(Packet.ID_NOT_AVAILABLE);
+                    //                    presence.setFrom(con.getUser());
+                    //                    presence.setTo(StringUtils.parseBareAddress(con.getUser()));
+                    //                    con.sendStanza(presence);
+                    //                    Log.v("state", "设置隐身");
+                    //                    break;
                 case 5:
                     presence = new Presence(Presence.Type.unavailable);
                     connection.sendStanza(presence);
@@ -391,7 +435,7 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
                                 AccountManager accountManager = AccountManager.getInstance(connection);
                                 //允许不安全的创建账户，不加会报错IllegalStateException
                                 accountManager.sensitiveOperationOverInsecureConnection(true);
-                                accountManager.createAccount(Localpart.from(account),password);
+                                accountManager.createAccount(Localpart.from(account), password);
                                 emitter.onNext(true);
                             }
                         });
@@ -429,10 +473,10 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
                     @Override
                     public List<ChatUser> apply(List<RosterEntry> rosterEntries) throws Exception {
                         List<ChatUser> users = new ArrayList<>();
-                        for (RosterEntry e :rosterEntries) {
+                        for (RosterEntry e : rosterEntries) {
                             ChatUser user = chatUserMap.get(e.getJid().toString());
-                            if(user == null){
-                                long conversationId = chatDbManager.getConversationId(currentUserName,e.getJid().toString().split("@")[0],e.getJid().toString());
+                            if (user == null) {
+                                long conversationId = chatDbManager.getConversationId(currentUserName, e.getJid().toString().split("@")[0], e.getJid().toString());
                                 user = new ChatUser();
                                 user.setUserNick(e.getName());
                                 user.setJid(e.getJid().toString());
@@ -451,8 +495,8 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
                 .observeOn(AndroidSchedulers.mainThread());
     }
 
-    public long getConversationId(String targetUserName,String jid){
-        return chatDbManager.getConversationId(currentUserName,targetUserName,jid);
+    public long getConversationId(String targetUserName, String jid) {
+        return chatDbManager.getConversationId(currentUserName, targetUserName, jid);
     }
 
     /**
@@ -499,8 +543,8 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
                     @Override
                     public Boolean apply(CustomChatMessage s) throws Exception {
                         //先存储
-                        if(isSave){
-                            chatDbManager.saveMessage(s,false);
+                        if (isSave) {
+                            chatDbManager.saveMessage(s, false);
                         }
                         chat.send(gson.toJson(s));
                         return true;
@@ -510,7 +554,7 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
                 .observeOn(AndroidSchedulers.mainThread());
     }
 
-    public Observable<List<CustomChatMessage>> loadLocalMessage(final long conversationId){
+    public Observable<List<CustomChatMessage>> loadLocalMessage(final long conversationId) {
         return Observable.just(conversationId)
                 .filter(new Predicate<Long>() {
                     @Override
@@ -521,7 +565,7 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
                 .map(new Function<Long, List<CustomChatMessage>>() {
                     @Override
                     public List<CustomChatMessage> apply(Long aLong) throws Exception {
-                        return  chatDbManager.getMessage(conversationId);
+                        return chatDbManager.getMessage(conversationId);
                     }
                 })
                 .subscribeOn(Schedulers.io())
@@ -564,15 +608,15 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
     }
 
     public ChatUser getUserInfo(String account) {
-        if(TextUtils.equals(account,currentUserName)){
+        if (TextUtils.equals(account, currentUserName)) {
             ChatUser us = new ChatUser();
             us.setJid(connection.getUser().asBareJid().toString());
             us.setUserName(account);
             return us;
         }
-        if(account != null && chatUserMap != null){
+        if (account != null && chatUserMap != null) {
             for (ChatUser us : chatUserMap.values()) {
-                if(TextUtils.equals(account,us.getUserName())){
+                if (TextUtils.equals(account, us.getUserName())) {
                     return us;
                 }
             }
@@ -584,8 +628,6 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
         EntityBareJid entityBareJid = JidCreate.entityBareFrom(jid);
         return VCardManager.getInstanceFor(connection).loadVCard(entityBareJid);
     }
-
-
 
 
     public Context getAppContext() {
@@ -614,17 +656,17 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
     public void onEvent(AttachmentProgress progress) {
         //业务流程：
         // 更新UI
-        if(xmppAttachProgressListener != null){
+        if (xmppAttachProgressListener != null) {
             xmppAttachProgressListener.xmppAttachmentProgress(progress);
         }
         //上传完毕后发送消息
-        if(progress.getTransferred() == progress.getTotal()){
+        if (progress.getTransferred() == progress.getTotal()) {
             final CustomChatMessage message = chatDbManager.getMessageByUUid(progress.getUuid());
-            if(message != null){
+            if (message != null) {
                 try {
                     Chat chat = ChatManager.getInstanceFor(connection)
                             .chatWith(JidCreate.entityBareFrom(message.getRecieveJid()));
-                    sendMessage(chat,message,false)
+                    sendMessage(chat, message, false)
                             .subscribe(new Consumer<Boolean>() {
                                 @Override
                                 public void accept(Boolean aBoolean) throws Exception {
@@ -653,27 +695,27 @@ public class XmppConnection implements AttachmentProgressUpdateListener {
     }
 
     public void uploadFileMessage(CustomChatMessage message, String uuid) {
-        attachmentProgressManager.uploadAttachment(message,uuid);
+        attachmentProgressManager.uploadAttachment(message, uuid);
     }
 
-    public interface XmppAttachProgressListener{
+    public interface XmppAttachProgressListener {
         void xmppAttachmentProgress(AttachmentProgress attachmentProgress);
     }
 
-    public interface XmppIncomingChatMessageListener{
+    public interface XmppIncomingChatMessageListener {
         public void newIncomingMessage(EntityBareJid from, CustomChatMessage message, Chat chat);
     }
 
-    public interface XmppOutgoingChatMessageListener{
+    public interface XmppOutgoingChatMessageListener {
         public void newOutgoingMessage(EntityBareJid to, CustomChatMessage message, Chat chat);
     }
 
 
-    public void attachActivity(BaseMessageActivity messageActivity){
+    public void attachActivity(BaseMessageActivity messageActivity) {
         this.activity = messageActivity;
     }
 
-    public void dettachActivity(){
+    public void dettachActivity() {
         this.activity = null;
     }
 

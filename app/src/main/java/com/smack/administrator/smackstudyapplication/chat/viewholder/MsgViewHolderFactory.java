@@ -44,6 +44,10 @@ public class MsgViewHolderFactory {
             return MsgViewHolderPicture.class;
         }
 
+        if(message.getType() == MessageType.TYPE_VOICE){
+            return MsgViewHolderAudio.class;
+        }
+
 
         //        if (message.getType() == 1) {
 //            return MsgViewHolderText.class;
@@ -88,6 +92,7 @@ public class MsgViewHolderFactory {
         list.add(MsgViewHolderUnknown.class);
         list.add(MsgViewHolderText.class);
         list.add(MsgViewHolderPicture.class);
+        list.add(MsgViewHolderAudio.class);
 
         return list;
     }

@@ -69,8 +69,14 @@ public class MsgViewHolderAudio extends MsgViewHolderBase {
     protected void onItemClick() {
         if (audioControl != null) {
             AudioMsgAttachment msgAttachment = gson.fromJson(message.getMsgAattachment(),AudioMsgAttachment.class);
-            if(isReceivedMessage() && TextUtils.isEmpty(msgAttachment.getFilePath())){
-                //TODO 调用文件下载
+            if(isReceivedMessage() && msgAttachment.getAttachmentStatus() != 2){
+                if(msgAttachment.getAttachmentStatus() == 3){
+                    //TODO 文件下载失败，重新下载，调用文件下载，下载完成播放
+                }
+
+                if(msgAttachment.getAttachmentStatus() == 1){
+                    //TODO 文件正在下载中，下载完成即播放，添加文件下载完成监听
+                }
                 return;
             }
 

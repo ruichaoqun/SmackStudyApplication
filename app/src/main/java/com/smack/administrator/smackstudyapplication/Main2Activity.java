@@ -108,4 +108,10 @@ public class Main2Activity extends AppCompatActivity implements View.OnClickList
     public void onClick(View v) {
 
     }
+
+    @Override
+    public void onBackPressed() {
+        XmppConnection.getInstance().logout();
+        super.onBackPressed();
+    }
 }
